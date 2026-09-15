@@ -228,6 +228,12 @@ body.aluno .chip,body.aluno .entrada .qr,body.aluno .entrada .url,body.aluno .ja
 .somente-aluno{display:none}
 body.aluno .somente-aluno{display:block}
 body.aluno .somente-projetor{display:none}
+body.aluno .regua button{display:none}
+#esperando{display:none;min-height:58vh;flex-direction:column;justify-content:center;gap:12px;padding:24px 18px;text-align:center}
+#esperando b{font-size:1.25rem}
+#esperando span{max-width:34ch;margin:0 auto;line-height:1.5;opacity:.72}
+body.aluno.esperando .palco{display:none}
+body.aluno.esperando #esperando{display:flex}
 
 body.roteiro .palco,body.roteiro .regua,body.roteiro .notas,body.roteiro #barraAluno{display:none}
 #roteiro{display:none;max-width:56rem;margin:0 auto;padding:36px 22px 80px}
@@ -537,6 +543,12 @@ body.roteiro #roteiro{display:block}
   <p class="sub">Como está, o roteiro pede 24,5 min. Para caber em 20: corte o vídeo 2 e as curiosidades do Censo, e reduza norma × prática a três pares. Não corte o conceito, a Resolução 8/2012, o caso final nem a nuvem.</p>
 </div>
 
+<div id="esperando">
+  <b>Acompanhe a tela.</b>
+  <span>Quando chegar a sua vez, a pergunta aparece aqui sozinha — você não precisa procurar nada.</span>
+  <span>A dúvida anônima pode ser enviada a qualquer momento, na barra de baixo.</span>
+</div>
+
 <div class="notas" id="notas"></div>
 
 <div class="regua">
@@ -557,6 +569,7 @@ body.roteiro #roteiro{display:block}
   const contador = document.getElementById("contador"), crono = document.getElementById("crono");
   const suave = !window.matchMedia("(prefers-reduced-motion: reduce)").matches;
   let atual = 0, resta = 0, rodando = true, tick = null, sb = null, janela = null;
+  const PROJETOR = MODO !== "aluno" && MODO !== "roteiro";
 
   if (MODO === "aluno") document.body.classList.add("aluno");
   if (MODO === "roteiro") document.body.classList.add("roteiro");
@@ -607,15 +620,25 @@ body.roteiro #roteiro{display:block}
     notas.textContent = (s.dataset.falante ? nome(s.dataset.falante)+": " : "") + (s.dataset.nota || "");
     contador.textContent = (atual+1)+"/"+slides.length;
     s.scrollTop = 0; if (MODO === "aluno") window.scrollTo(0,0);
+    if (MODO === "aluno"){
+      const util = s.dataset.pergunta || s.querySelector(".somente-aluno") || atual === slides.length-1;
+      document.body.classList.toggle("esperando", !util);
+    }
     iniciaCrono(parseInt(s.dataset.tempo || "0", 10));
     pararVideos();
     if (s.dataset.janela) abreJanela(s);
     if (s.dataset.pergunta) carregar(s.dataset.pergunta);
+    if (PROJETOR) publicaSlide(atual);
+  }
+  function vaiPara(i){ if (typeof i === "number" && i !== atual) ir(i); }
+  async function publicaSlide(i){
+    if (!sb) return;
+    await sb.from("sala_estado").upsert({ sala:SALA, slide:i, atualizado_em:new Date().toISOString() }, { onConflict:"sala" });
   }
   document.getElementById("btnAvancar").onclick = () => ir(atual+1);
   document.getElementById("btnVoltar").onclick = () => ir(atual-1);
   document.addEventListener("keydown", e => {
-    if (document.body.classList.contains("roteiro") || e.target.tagName === "INPUT") return;
+    if (document.body.classList.contains("roteiro") || MODO === "aluno" || e.target.tagName === "INPUT") return;
     const k = e.key.toLowerCase();
     if (["ArrowRight","PageDown"," "].includes(e.key)){ e.preventDefault(); ir(atual+1); }
     if (["ArrowLeft","PageUp"].includes(e.key)){ e.preventDefault(); ir(atual-1); }
@@ -980,7 +1003,12 @@ body.roteiro #roteiro{display:block}
       sb.channel("sala-"+SALA)
         .on("postgres_changes",{event:"INSERT",schema:"public",table:"respostas",filter:"sala=eq."+SALA},
             e => carregar(e.new.pergunta))
+        .on("postgres_changes",{event:"*",schema:"public",table:"sala_estado",filter:"sala=eq."+SALA},
+            e => { if (!PROJETOR && e.new) vaiPara(e.new.slide); })
         .subscribe();
+      if (PROJETOR) publicaSlide(atual);
+      else sb.from("sala_estado").select("slide").eq("sala",SALA).maybeSingle()
+             .then(({ data }) => { if (data) vaiPara(data.slide); });
       if (MODO === "aluno") registrar("entrada","ok");
       carregar("entrada"); carregar("duvida");
       const p = slides[atual].dataset.pergunta; if (p) carregar(p);
