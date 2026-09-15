@@ -724,7 +724,7 @@ body.roteiro #roteiro{display:block}
   document.addEventListener("keydown", e => {
     if (document.body.classList.contains("roteiro") || MODO === "aluno" || e.target.tagName === "INPUT") return;
     const k = e.key.toLowerCase();
-    if (["ArrowRight","PageDown"," "].includes(e.key)){ e.preventDefault(); ir(atual+1); }
+    if (["ArrowRight","PageDown"," ","Enter"].includes(e.key)){ e.preventDefault(); ir(atual+1); }
     if (["ArrowLeft","PageUp"].includes(e.key)){ e.preventDefault(); ir(atual-1); }
     if (k === "n") document.body.classList.toggle("mostrar-notas");
     if (k === "t") rodando = !rodando;
@@ -741,7 +741,8 @@ body.roteiro #roteiro{display:block}
     if (armado) clearTimeout(armado);
     armado = null; btnZerar.classList.remove("armado"); btnZerar.textContent = "Zerar dados";
   }
-  if (btnZerar) btnZerar.onclick = async () => {
+  if (btnZerar) btnZerar.onclick = async (ev) => {
+    if (!ev.detail) return;
     if (!sb){ btnZerar.textContent = "sem conexão"; setTimeout(desarma, 2500); return; }
     if (!armado){
       const { count } = await sb.from("respostas").select("*", { count:"exact", head:true }).eq("sala", SALA);
@@ -756,6 +757,13 @@ body.roteiro #roteiro{display:block}
     await sb.from("sala_estado").delete().eq("sala", SALA);
     location.reload();
   };
+
+  document.addEventListener("click", e => {
+    const bt = e.target.closest("button");
+    if (bt && e.detail) bt.blur();
+    const foco = document.activeElement;
+    if (foco && foco.tagName === "IFRAME" && !e.target.closest(".moldura")) foco.blur();
+  });
 
   function pararVideos(){ document.querySelectorAll(".moldura iframe").forEach(f => f.src = f.src); }
   Object.keys(VIDEOS).forEach(chave => {
