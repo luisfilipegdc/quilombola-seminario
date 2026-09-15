@@ -228,6 +228,9 @@ body.aluno.duvida-aberta #bolhaDuvida .fechar{display:block}
 .regua .passo.agora{background:var(--cal)}
 .regua button{background:none;border:1px solid var(--linha);color:var(--cal-fraco);font-size:.76rem;padding:5px 10px;cursor:pointer}
 .regua button:hover{color:var(--cal);border-color:var(--cal-fraco)}
+.regua #zerar{opacity:.4;transition:opacity .2s,border-color .2s,color .2s}
+.regua #zerar:hover{opacity:1}
+.regua #zerar.armado{opacity:1;color:var(--dende);border-color:var(--dende)}
 .crono{min-width:4.6rem;text-align:right;font-weight:600;font-variant-numeric:tabular-nums}
 .crono.estourou{color:var(--cal);text-decoration:underline}
 body.aluno .regua{position:static;background:none;margin-bottom:64px}
@@ -598,6 +601,7 @@ body.roteiro #roteiro{display:block}
   <button id="btnAvancar" type="button">Avançar</button>
   <span class="crono" id="crono"></span>
   <span id="contador"></span>
+  <button id="zerar" type="button" title="Apaga as respostas desta sala e volta ao primeiro slide">Zerar dados</button>
 </div>
 
 <script src="https://cdn.jsdelivr.net/npm/qrcode-generator@1.4.4/qrcode.js"></script>
@@ -693,6 +697,28 @@ body.roteiro #roteiro{display:block}
     if (k === "p"){ document.body.classList.toggle("ver-duvidas"); document.getElementById("avisoDuvida").classList.remove("on"); }
     if (k === "f") document.fullscreenElement ? document.exitFullscreen() : document.documentElement.requestFullscreen?.();
   });
+
+  const btnZerar = document.getElementById("zerar");
+  let armado = null;
+  function desarma(){
+    if (armado) clearTimeout(armado);
+    armado = null; btnZerar.classList.remove("armado"); btnZerar.textContent = "Zerar dados";
+  }
+  if (btnZerar) btnZerar.onclick = async () => {
+    if (!sb){ btnZerar.textContent = "sem conexão"; setTimeout(desarma, 2500); return; }
+    if (!armado){
+      const { count } = await sb.from("respostas").select("*", { count:"exact", head:true }).eq("sala", SALA);
+      btnZerar.classList.add("armado");
+      btnZerar.textContent = "Apagar " + (count || 0) + " e recomeçar? Clique de novo";
+      armado = setTimeout(desarma, 6000);
+      return;
+    }
+    clearTimeout(armado); armado = null;
+    btnZerar.disabled = true; btnZerar.textContent = "Apagando…";
+    await sb.from("respostas").delete().eq("sala", SALA);
+    await sb.from("sala_estado").delete().eq("sala", SALA);
+    location.reload();
+  };
 
   function pararVideos(){ document.querySelectorAll(".moldura iframe").forEach(f => f.src = f.src); }
   Object.keys(VIDEOS).forEach(chave => {
