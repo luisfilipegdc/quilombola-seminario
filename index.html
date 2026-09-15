@@ -235,6 +235,26 @@ body.aluno .regua button{display:none}
 body.aluno.esperando .palco{display:none}
 body.aluno.esperando #esperando{display:flex}
 
+/* ---- modo aluno: mobile, toque e movimento ---- */
+#barraAluno{padding-bottom:calc(10px + env(safe-area-inset-bottom))}
+#barraAluno input{font-size:16px}
+body.aluno .regua{margin-bottom:calc(64px + env(safe-area-inset-bottom))}
+body.aluno .palco{padding-bottom:72px}
+
+button:disabled{opacity:.45;cursor:default}
+body.aluno .opcao,body.aluno .chute button,#barraAluno button{transition:border-color .2s,background .2s,transform .12s}
+body.aluno .opcao:active,body.aluno .chute button:active:not(:disabled),#barraAluno button:active{transform:scale(.97)}
+body.aluno .opcao:active{border-color:var(--dende)}
+
+@keyframes entraTela{from{opacity:0;transform:translateY(16px)}to{opacity:1;transform:none}}
+body.aluno .slide.ativo>.interno,body.aluno.esperando #esperando{animation:entraTela .34s cubic-bezier(.2,.7,.3,1)}
+
+@keyframes confirmaVoto{0%{transform:scale(1)}45%{transform:scale(1.025)}100%{transform:scale(1)}}
+body.aluno .opcao.escolhida{animation:confirmaVoto .42s cubic-bezier(.2,.7,.3,1)}
+
+@keyframes respira{0%,100%{opacity:.3;transform:scale(1)}50%{opacity:.95;transform:scale(1.4)}}
+#esperando .vivo{width:8px;height:8px;border-radius:50%;background:var(--dende);margin:6px auto 0;animation:respira 2.6s ease-in-out infinite}
+
 body.roteiro .palco,body.roteiro .regua,body.roteiro .notas,body.roteiro #barraAluno{display:none}
 #roteiro{display:none;max-width:56rem;margin:0 auto;padding:36px 22px 80px}
 body.roteiro #roteiro{display:block}
@@ -547,6 +567,7 @@ body.roteiro #roteiro{display:block}
   <b>Acompanhe a tela.</b>
   <span>Quando chegar a sua vez, a pergunta aparece aqui sozinha — você não precisa procurar nada.</span>
   <span>A dúvida anônima pode ser enviada a qualquer momento, na barra de baixo.</span>
+  <span class="vivo" aria-hidden="true"></span>
 </div>
 
 <div class="notas" id="notas"></div>
@@ -630,7 +651,11 @@ body.roteiro #roteiro{display:block}
     if (s.dataset.pergunta) carregar(s.dataset.pergunta);
     if (PROJETOR) publicaSlide(atual);
   }
-  function vaiPara(i){ if (typeof i === "number" && i !== atual) ir(i); }
+  function vaiPara(i){
+    if (typeof i !== "number" || i === atual) return;
+    ir(i);
+    if (MODO === "aluno" && suave && slides[atual].dataset.pergunta) { try { navigator.vibrate?.(18); } catch(e){} }
+  }
   async function publicaSlide(i){
     if (!sb) return;
     await sb.from("sala_estado").upsert({ sala:SALA, slide:i, atualizado_em:new Date().toISOString() }, { onConflict:"sala" });
