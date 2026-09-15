@@ -151,15 +151,20 @@ p{max-width:64ch;margin:0 0 .9em}
 .chute input{background:none;border:1px solid var(--linha);color:var(--cal);font-size:1.6rem;font-weight:800;padding:12px 14px;width:100%}
 .chute input:focus{border-color:var(--dende);outline:none}
 .chute button{background:var(--dende);border:0;color:var(--anil);font-weight:600;font-size:1rem;padding:13px;cursor:pointer}
-.termo{margin:1.6rem 0 0;position:relative;height:150px}
-.termo .escala{position:absolute;left:0;right:0;top:86px;height:4px;background:var(--linha)}
+.termo{margin:1.6rem 0 0;position:relative;height:240px}
+.termo .escala{position:absolute;left:0;right:0;top:190px;height:4px;background:var(--linha)}
 .termo .marca{position:absolute;top:0;transform:translateX(-50%);text-align:center;transition:left 1.1s cubic-bezier(.2,.7,.3,1)}
 .termo .marca .valor{display:block;font-weight:800;font-size:clamp(1.4rem,3.4vw,2.2rem);line-height:1;font-variant-numeric:tabular-nums}
 .termo .marca .rotulo{display:block;font-size:.72rem;color:var(--cal-fraco);margin-top:4px}
-.termo .marca .haste{display:block;width:2px;height:26px;margin:8px auto 0}
+.termo .marca .haste{display:block;width:2px;height:131px;margin:8px auto 0}
+.termo .media{top:56px} .termo .media .haste{height:75px}
+.termo .chutes{position:absolute;left:0;right:0;top:0;height:190px;pointer-events:none}
+.termo .ponto{position:absolute;width:var(--tam,9px);height:var(--tam,9px);border-radius:50%;background:var(--cal);
+  box-shadow:0 0 0 2px var(--anil);transform:translateX(-50%);animation:pousa .5s cubic-bezier(.2,.7,.3,1) both}
+@keyframes pousa{from{opacity:0;transform:translate(-50%,-16px)}to{opacity:1;transform:translateX(-50%)}}
 .termo .media .valor{color:var(--cal-fraco)} .termo .media .haste{background:var(--cal-fraco)}
 .termo .real .valor{color:var(--roca)} .termo .real .haste{background:var(--roca)}
-.termo .limites{position:absolute;left:0;right:0;top:100px;display:flex;justify-content:space-between;
+.termo .limites{position:absolute;left:0;right:0;top:204px;display:flex;justify-content:space-between;
   font-family:var(--display);font-size:.72rem;color:var(--cal-fraco)}
 
 /* nuvem de palavras */
@@ -406,7 +411,8 @@ body.roteiro #roteiro{display:block}
       <div class="marca real oculto" id="marcaReal" style="left:0">
         <span class="valor">1.696</span><span class="rotulo">número real</span><span class="haste"></span>
       </div>
-      <div class="escala"></div>
+      <div class="chutes" id="chutes"></div>
+    <div class="escala"></div>
       <div class="limites"><span>0</span><span>5.568 municípios</span></div>
     </div>
     <div class="veredito oculto" id="vereditoChute">
@@ -980,6 +986,29 @@ body.roteiro #roteiro{display:block}
     }
   }
 
+  function poeChutes(nums){
+    const alvo = document.getElementById("chutes"); if (!alvo) return;
+    const BINS = 60, EIXO = 190;
+    const pilha = {};
+    nums.forEach(v => { const b = Math.round(v/5568*BINS); pilha[b] = (pilha[b] || 0) + 1; });
+    const maior = Math.max(1, ...Object.values(pilha));
+    const TETO = 62;
+    const passo = Math.min(12, TETO/Math.max(1, maior-1));
+    const tam = Math.max(5, Math.min(9, Math.round(passo)+1));
+    alvo.style.setProperty("--tam", tam + "px");
+    alvo.innerHTML = "";
+    Object.keys(pilha).forEach(b => {
+      for (let i = 0; i < pilha[b]; i++){
+        const d = document.createElement("i");
+        d.className = "ponto";
+        d.style.left = (b/BINS*100) + "%";
+        d.style.top = (EIXO - 4 - tam - i*passo) + "px";
+        if (suave) d.style.animationDelay = Math.min(700, i*45) + "ms";
+        alvo.appendChild(d);
+      }
+    });
+  }
+
   function poeNuvem(lista){
     const alvo = document.getElementById("nuvem"); if (!alvo) return;
     const c = {}; lista.forEach(w => { const k = w.trim().toLowerCase(); if (k) c[k] = (c[k]||0)+1; });
@@ -999,13 +1028,14 @@ body.roteiro #roteiro{display:block}
     const { data, error } = await sb.from("respostas").select("opcao").eq("sala",SALA).eq("pergunta",p);
     if (error || !data) return;
     if (p === "chute"){
-      const nums = data.map(r => parseFloat(r.opcao)).filter(n => !isNaN(n));
+      const nums = data.map(r => parseFloat(r.opcao)).filter(n => !isNaN(n) && n >= 0 && n <= 5568);
+      contagens.chute = nums.length; pintaEspera();
       if (!nums.length) return;
       const media = Math.round(nums.reduce((a,b)=>a+b,0)/nums.length);
       const m = document.getElementById("marcaMedia");
       m.querySelector(".valor").textContent = fmtN(media);
       m.style.left = Math.min(96, Math.max(4, media/5568*100)) + "%";
-      contagens.chute = nums.length; pintaEspera();
+      poeChutes(nums);
       msg("chute", nums.length + (nums.length === 1 ? " chute enviado" : " chutes enviados"));
       return;
     }
