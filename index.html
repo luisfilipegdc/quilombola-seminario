@@ -183,8 +183,24 @@ body.ver-duvidas #duvidas{display:block}
 
 /* barra do aluno */
 #barraAluno{position:fixed;left:0;right:0;bottom:0;background:var(--anil-2);border-top:1px solid var(--linha);
-  padding:10px 14px;display:none;gap:8px;z-index:20}
-body.aluno #barraAluno{display:flex}
+  padding:10px 14px;display:none;gap:8px;z-index:21}
+body.aluno.duvida-aberta #barraAluno{display:flex;animation:sobeBarra .26s cubic-bezier(.2,.7,.3,1)}
+@keyframes sobeBarra{from{transform:translateY(100%);opacity:0}to{transform:none;opacity:1}}
+
+/* balao flutuante da duvida */
+#bolhaDuvida{display:none;position:fixed;right:16px;bottom:calc(16px + env(safe-area-inset-bottom));
+  width:56px;height:56px;border-radius:50%;border:0;background:var(--dende);color:var(--anil);
+  align-items:center;justify-content:center;cursor:pointer;z-index:22;
+  box-shadow:0 6px 20px rgba(0,0,0,.35);transition:transform .18s cubic-bezier(.2,.7,.3,1),opacity .18s}
+body.aluno #bolhaDuvida{display:flex}
+#bolhaDuvida:active{transform:scale(.92)}
+#bolhaDuvida svg{width:26px;height:26px;display:block}
+#bolhaDuvida .fechar{display:none}
+body.aluno.duvida-aberta #bolhaDuvida{transform:translateY(-58px) rotate(90deg)}
+body.aluno.duvida-aberta #bolhaDuvida .abrir{display:none}
+body.aluno.duvida-aberta #bolhaDuvida .fechar{display:block}
+@keyframes chamaAtencao{0%,100%{transform:scale(1)}50%{transform:scale(1.12)}}
+#bolhaDuvida.enviou{animation:chamaAtencao .5s cubic-bezier(.2,.7,.3,1)}
 #barraAluno input{flex:1;background:none;border:1px solid var(--linha);color:var(--cal);padding:10px;font-size:.95rem}
 #barraAluno input:focus{border-color:var(--dende);outline:none}
 #barraAluno button{background:none;border:1px solid var(--dende);color:var(--dende);padding:10px 14px;font-weight:600;cursor:pointer}
@@ -524,6 +540,11 @@ body.roteiro #roteiro{display:block}
 <aside id="duvidas"><h3>Dúvidas da turma (anônimas)</h3><ul id="listaDuvidas"></ul></aside>
 <div class="aviso-duvida" id="avisoDuvida"></div>
 
+<button id="bolhaDuvida" type="button" aria-label="Mandar uma dúvida anônima" aria-expanded="false" aria-controls="barraAluno">
+  <svg class="abrir" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.1" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M21 11.5a8.4 8.4 0 0 1-9 8.4 9.5 9.5 0 0 1-2.9-.4L3 21l1.6-4.7A8.2 8.2 0 0 1 3.6 11.5a8.4 8.4 0 0 1 9-8.4 8.4 8.4 0 0 1 8.4 8.4z"/></svg>
+  <svg class="fechar" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.3" stroke-linecap="round" aria-hidden="true"><path d="M18 6 6 18M6 6l12 12"/></svg>
+</button>
+
 <div id="barraAluno">
   <input type="text" id="campoDuvida" maxlength="140" placeholder="mande uma dúvida anônima">
   <button type="button" id="enviarDuvida">Enviar</button>
@@ -565,7 +586,7 @@ body.roteiro #roteiro{display:block}
 <div id="esperando">
   <b>Acompanhe a tela.</b>
   <span>Quando chegar a sua vez, a pergunta aparece aqui sozinha — você não precisa procurar nada.</span>
-  <span>A dúvida anônima pode ser enviada a qualquer momento, na barra de baixo.</span>
+  <span>A dúvida anônima pode ser enviada a qualquer momento, no balão do canto.</span>
   <span class="vivo" aria-hidden="true"></span>
 </div>
 
@@ -999,6 +1020,17 @@ body.roteiro #roteiro{display:block}
     else { msg("palavra","Sua palavra já está na tela."); campoP.value = ""; }
   };
 
+  const bolha = document.getElementById("bolhaDuvida");
+  function abreDuvida(abrir){
+    document.body.classList.toggle("duvida-aberta", abrir);
+    bolha.setAttribute("aria-expanded", abrir ? "true" : "false");
+    if (abrir) document.getElementById("campoDuvida").focus();
+  }
+  if (bolha) bolha.onclick = () => abreDuvida(!document.body.classList.contains("duvida-aberta"));
+  document.addEventListener("keydown", e => {
+    if (e.key === "Escape" && document.body.classList.contains("duvida-aberta")) abreDuvida(false);
+  });
+
   const campoD = document.getElementById("campoDuvida"), btnD = document.getElementById("enviarDuvida");
   if (btnD) btnD.onclick = async () => {
     const t = (campoD.value || "").trim();
@@ -1008,6 +1040,10 @@ body.roteiro #roteiro{display:block}
     btnD.disabled = false;
     campoD.value = "";
     campoD.placeholder = error ? "não deu para enviar — tente de novo" : "dúvida enviada · pode mandar outra";
+    if (!error){
+      abreDuvida(false);
+      bolha.classList.remove("enviou"); void bolha.offsetWidth; bolha.classList.add("enviou");
+    }
   };
 
   if (SUPABASE_URL && SUPABASE_KEY){
