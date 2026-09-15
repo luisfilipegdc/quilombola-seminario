@@ -1,0 +1,1010 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Educação Escolar Quilombola — seminário em grupo</title>
+
+<!--
+  ============================================================
+  ?             projetor · ?modo=roteiro ensaio · ?modo=aluno celular
+  Teclas: ← →  ·  N notas  ·  T pausa cronômetro  ·  P dúvidas da turma
+          R reabre janela de votação  ·  F tela cheia
+  Sala:   ?sala=pedagogia-2026 (o mesmo código no projetor e no QR)
+
+  COR — uma cor, uma função:
+    dendê #F2B02E ação do público · roça #7FB069 o que a lei garante
+    ocre  #C25A33 o que a escola entrega · anil/cal fundo e texto
+  MOVIMENTO — só responde a um evento real (voto que chegou,
+    carta virada, número revelado). Nada anima sozinho.
+  ============================================================
+-->
+
+<script>
+  const GRUPO = { A:"Luis", B:"Carlos Gabriel", C:"Rebeka" };
+  const VIDEOS = {
+    abertura: { id:"1QsTJUodSyw", titulo:"Educação quilombola: em busca de um ensino de qualidade (Projeto SETA)", duracao:"conferir" },
+    escola:   { id:"Fg7xh5QIStw", titulo:"Vídeo 2 — escolhido pelo grupo", duracao:"conferir" }
+  };
+  const SUPABASE_URL = "https://frsidsdrexolvcfxzroe.supabase.co";
+  const SUPABASE_KEY = "sb_publishable_xgr6ki59dLrTcdjDlmEtZA_LAF6m1BC";
+  const JANELA_VOTO = 30; // segundos de janela de votação
+</script>
+
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,400;12..96,600;12..96,800&family=Newsreader:ital,opsz,wght@0,6..72,300;0,6..72,400;0,6..72,500;1,6..72,300&display=swap" rel="stylesheet">
+
+<style>
+:root{
+  --anil:#132238; --anil-2:#1E3354; --linha:#2C4870;
+  --cal:#F2EEE6; --cal-fraco:#9FAABD;
+  --dende:#F2B02E; --roca:#7FB069; --ocre:#C25A33;
+  --display:"Bricolage Grotesque",system-ui,sans-serif;
+  --texto:"Newsreader",Georgia,serif;
+}
+*{box-sizing:border-box}
+html,body{margin:0;padding:0;height:100%}
+body{background:var(--anil);color:var(--cal);font-family:var(--texto);
+  font-size:clamp(17px,1.1vw + 13px,21px);line-height:1.55;-webkit-font-smoothing:antialiased}
+h1,h2,h3,button,input,.chip,.crono,.n,.marca,.ref,.norma,.dado,.legenda,.quando,.quem,.rotulo,.valor,.palavra{font-family:var(--display)}
+b,strong{font-weight:600}
+a{color:var(--cal);text-underline-offset:3px}
+
+.palco{height:100dvh;overflow:hidden;position:relative}
+.slide{position:absolute;inset:0;display:none;padding:clamp(20px,3.4vw,52px) clamp(20px,5vw,90px) 92px;overflow-y:auto}
+.slide.ativo{display:block}
+.slide > .interno{max-width:62rem;margin:0 auto}
+
+h1{font-size:clamp(2rem,5.4vw,4rem);font-weight:800;line-height:1.03;letter-spacing:-.025em;margin:.1em 0 .4em;max-width:18ch}
+h2{font-size:clamp(1.5rem,3.3vw,2.5rem);font-weight:600;line-height:1.13;letter-spacing:-.02em;margin:0 0 .7em;max-width:25ch}
+p{max-width:64ch;margin:0 0 .9em}
+.sub{color:var(--cal-fraco);font-size:.95rem;font-style:italic}
+.oculto{display:none}
+
+.chip{display:inline-flex;gap:9px;font-size:.78rem;font-weight:600;color:var(--cal-fraco);
+  border:1px solid var(--linha);padding:5px 11px;margin-bottom:1.1rem}
+.chip span{font-weight:400;opacity:.8}
+
+/* entrada */
+.entrada{display:grid;place-items:center;text-align:center;min-height:72vh;gap:20px}
+.entrada h1{max-width:20ch;margin:0}
+.entrada .qr{background:var(--cal);padding:14px;line-height:0}
+.entrada .qr img{width:clamp(170px,24vh,280px);height:auto;image-rendering:pixelated}
+.entrada .url{font-family:var(--display);font-size:.82rem;color:var(--cal-fraco);word-break:break-all}
+.contagem{font-family:var(--display);font-weight:800;font-size:clamp(1.6rem,4vw,2.6rem);color:var(--dende);line-height:1}
+.contagem small{display:block;font-size:.8rem;font-weight:400;color:var(--cal-fraco);margin-top:6px}
+.contagem.pulso{animation:bate .4s ease}
+@keyframes bate{0%{transform:scale(1)}40%{transform:scale(1.13)}100%{transform:scale(1)}}
+
+/* vídeo */
+.moldura{position:relative;width:100%;aspect-ratio:16/9;background:#000;border:1px solid var(--linha)}
+.moldura iframe{position:absolute;inset:0;width:100%;height:100%;border:0}
+.vazio{display:grid;place-content:center;gap:10px;text-align:center;padding:24px;color:var(--cal-fraco);height:100%}
+.vazio b{color:var(--cal);font-family:var(--display)}
+.tarefa{border-left:3px solid var(--linha);padding-left:18px;margin-top:1.1rem}
+
+/* linha do tempo */
+.tempo{display:flex;flex-wrap:wrap;gap:8px;margin:1.3rem 0 1.1rem}
+.ano{font-weight:600;font-size:1rem;background:none;color:var(--cal-fraco);border:1px solid var(--linha);padding:9px 15px;cursor:pointer}
+.ano:hover{color:var(--cal)}
+.ano[aria-selected="true"]{background:var(--cal);color:var(--anil);border-color:var(--cal)}
+.detalhe{border-left:3px solid var(--roca);padding-left:22px;min-height:8rem}
+.detalhe.entrando{animation:sobe .35s ease}
+@keyframes sobe{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:none}}
+.detalhe .norma{font-weight:600;font-size:1.3rem;line-height:1.2;margin-bottom:.35rem}
+
+/* cartas */
+.grade{display:grid;grid-template-columns:repeat(auto-fit,minmax(15rem,1fr));gap:12px;margin-top:1.1rem}
+.carta{border:1px solid var(--linha);background:rgba(30,51,84,.4);padding:18px;cursor:pointer;
+  color:inherit;font:inherit;text-align:left;display:grid;gap:8px;min-height:9.5rem;align-content:start;
+  transition:border-color .2s,background .2s}
+.carta:hover{border-color:var(--cal-fraco)}
+.carta .frente{font-family:var(--display);font-weight:600;font-size:1.02rem;line-height:1.25}
+.carta .verso{display:none;color:var(--cal-fraco);font-size:.94rem}
+.carta .dado{display:none;font-size:2.1rem;font-weight:800;line-height:1;font-variant-numeric:tabular-nums}
+.carta.aberta{border-color:var(--cal-fraco);background:rgba(30,51,84,.75)}
+.carta.aberta .verso,.carta.aberta .dado{display:block}
+.carta.aberta .verso{animation:sobe .4s ease .15s both}
+.carta.aberta .frente{color:var(--cal-fraco);font-size:.84rem;font-weight:400}
+
+/* pares */
+.legenda{display:flex;gap:18px;flex-wrap:wrap;font-size:.8rem;color:var(--cal-fraco);margin-bottom:1rem}
+.legenda i{display:inline-block;width:11px;height:11px;margin-right:6px;vertical-align:-1px}
+.pares{display:grid;gap:10px}
+.par{border:1px solid var(--linha);border-left:4px solid var(--roca);background:rgba(30,51,84,.4);
+  padding:15px 17px;cursor:pointer;text-align:left;color:inherit;font:inherit;display:grid;gap:7px;
+  transition:border-left-color .45s ease,border-color .2s}
+.par:hover{border-color:var(--cal-fraco)}
+.par.aberto{border-left-color:var(--ocre)}
+.par .norma{font-weight:600;font-size:1.02rem;line-height:1.3}
+.par .real{display:none;color:var(--cal-fraco);border-top:1px dotted var(--linha);padding-top:8px;font-style:italic}
+.par.aberto .real{display:block;animation:sobe .35s ease}
+.par .marca{font-size:.76rem;color:var(--cal-fraco)}
+
+/* enquete */
+.opcoes{display:grid;gap:10px;margin:1.1rem 0;max-width:44rem}
+.opcao{display:grid;gap:6px;border:1px solid var(--linha);background:rgba(30,51,84,.4);
+  padding:13px 16px;cursor:pointer;color:inherit;font:inherit;text-align:left;transition:border-color .2s}
+.opcao:hover{border-color:var(--dende)}
+.opcao.escolhida{border-color:var(--dende);background:rgba(242,176,46,.14)}
+.opcao b{font-family:var(--display);font-weight:600}
+.opcao .barra{height:6px;background:var(--linha);position:relative}
+.opcao .barra i{position:absolute;inset:0 auto 0 0;width:0;background:var(--dende);transition:width .55s cubic-bezier(.2,.7,.3,1)}
+.opcao .n{font-size:.78rem;color:var(--cal-fraco);font-variant-numeric:tabular-nums}
+.opcao.chegou .barra i{box-shadow:0 0 0 2px rgba(242,176,46,.45)}
+.status{font-size:.88rem;color:var(--cal-fraco);min-height:1.4em;max-width:44rem}
+.devolutiva{border-left:3px solid var(--dende);padding-left:16px;margin-top:.8rem;display:none}
+.devolutiva.on{display:block;animation:sobe .35s ease}
+.veredito{border-left:3px solid var(--roca);padding-left:18px;margin-top:1rem}
+.veredito:not(.oculto){animation:sobe .4s ease}
+
+/* janela de votação */
+.janela{max-width:44rem;margin:.2rem 0 1rem}
+.janela .trilho{height:3px;background:var(--linha);position:relative;overflow:hidden}
+.janela .trilho i{position:absolute;inset:0 auto 0 0;background:var(--dende);width:100%}
+.janela .txt{font-family:var(--display);font-size:.76rem;color:var(--cal-fraco);margin-top:6px;display:block}
+
+/* chute + termômetro */
+.chute{display:grid;gap:12px;max-width:26rem;margin:1.2rem 0}
+.chute input{background:none;border:1px solid var(--linha);color:var(--cal);font-size:1.6rem;font-weight:800;padding:12px 14px;width:100%}
+.chute input:focus{border-color:var(--dende);outline:none}
+.chute button{background:var(--dende);border:0;color:var(--anil);font-weight:600;font-size:1rem;padding:13px;cursor:pointer}
+.termo{margin:1.6rem 0 0;position:relative;height:150px}
+.termo .escala{position:absolute;left:0;right:0;top:86px;height:4px;background:var(--linha)}
+.termo .marca{position:absolute;top:0;transform:translateX(-50%);text-align:center;transition:left 1.1s cubic-bezier(.2,.7,.3,1)}
+.termo .marca .valor{display:block;font-weight:800;font-size:clamp(1.4rem,3.4vw,2.2rem);line-height:1;font-variant-numeric:tabular-nums}
+.termo .marca .rotulo{display:block;font-size:.72rem;color:var(--cal-fraco);margin-top:4px}
+.termo .marca .haste{display:block;width:2px;height:26px;margin:8px auto 0}
+.termo .media .valor{color:var(--cal-fraco)} .termo .media .haste{background:var(--cal-fraco)}
+.termo .real .valor{color:var(--roca)} .termo .real .haste{background:var(--roca)}
+.termo .limites{position:absolute;left:0;right:0;top:100px;display:flex;justify-content:space-between;
+  font-family:var(--display);font-size:.72rem;color:var(--cal-fraco)}
+
+/* nuvem de palavras */
+.nuvem{display:flex;flex-wrap:wrap;gap:10px 20px;align-items:baseline;justify-content:center;
+  min-height:44vh;align-content:center;padding:10px 0}
+.palavra{font-weight:600;line-height:1.1;animation:entra .5s cubic-bezier(.2,.8,.3,1)}
+@keyframes entra{from{opacity:0;transform:scale(.6)}to{opacity:1;transform:none}}
+.nuvem .n1{font-size:clamp(1rem,2.4vw,1.5rem);color:var(--cal-fraco)}
+.nuvem .n2{font-size:clamp(1.5rem,3.6vw,2.4rem);color:var(--cal)}
+.nuvem .n3{font-size:clamp(2.2rem,6vw,4rem);color:var(--dende)}
+
+/* dúvidas */
+#duvidas{position:fixed;top:0;right:0;bottom:0;width:min(28rem,86vw);background:var(--anil-2);
+  border-left:1px solid var(--linha);padding:22px;overflow-y:auto;display:none;z-index:20}
+body.ver-duvidas #duvidas{display:block}
+#duvidas h3{font-size:1rem;margin:0 0 14px;color:var(--cal-fraco)}
+#duvidas li{list-style:none;border-left:2px solid var(--dende);padding:8px 0 8px 12px;margin-bottom:10px;font-size:.95rem}
+#duvidas ul{margin:0;padding:0}
+.aviso-duvida{position:fixed;right:16px;bottom:52px;background:var(--dende);color:var(--anil);
+  font-family:var(--display);font-size:.78rem;font-weight:600;padding:7px 12px;display:none;z-index:15}
+.aviso-duvida.on{display:block;animation:bate .4s ease}
+
+/* barra do aluno */
+#barraAluno{position:fixed;left:0;right:0;bottom:0;background:var(--anil-2);border-top:1px solid var(--linha);
+  padding:10px 14px;display:none;gap:8px;z-index:20}
+body.aluno #barraAluno{display:flex}
+#barraAluno input{flex:1;background:none;border:1px solid var(--linha);color:var(--cal);padding:10px;font-size:.95rem}
+#barraAluno input:focus{border-color:var(--dende);outline:none}
+#barraAluno button{background:none;border:1px solid var(--dende);color:var(--dende);padding:10px 14px;font-weight:600;cursor:pointer}
+
+.lista{margin:0;padding:0;list-style:none;display:grid;gap:13px;max-width:58rem}
+.lista li{border-left:2px solid var(--roca);padding-left:16px}
+.lista.neutra li{border-left-color:var(--linha)}
+.lista .ref{font-family:var(--display);font-weight:600;font-size:1rem}
+.lista .oq{color:var(--cal-fraco);font-size:.94rem}
+
+/* colunas de escolas */
+.colunas{display:flex;gap:clamp(24px,6vw,64px);align-items:flex-end;height:240px;margin:1.4rem 0 1rem}
+.coluna{display:grid;justify-items:center;gap:8px;align-content:end}
+.coluna .num{font-family:var(--display);font-weight:800;font-size:clamp(1.3rem,3vw,2rem);font-variant-numeric:tabular-nums;color:var(--cal-fraco)}
+.coluna .haste{width:clamp(46px,9vw,88px);background:var(--linha);height:6px;transition:height 1.1s cubic-bezier(.2,.7,.3,1)}
+.coluna.cheia .haste{background:var(--roca)}
+.coluna .ano-rot{font-family:var(--display);font-size:.8rem;color:var(--cal-fraco)}
+
+.regua{position:fixed;left:0;right:0;bottom:0;display:flex;align-items:center;gap:13px;
+  padding:9px clamp(14px,4vw,30px);background:linear-gradient(to top,rgba(19,34,56,.98),rgba(19,34,56,.55));
+  font-family:var(--display);font-size:.76rem;color:var(--cal-fraco);z-index:10}
+.regua .passos{display:flex;gap:4px;flex:1}
+.regua .passo{height:3px;flex:1;background:var(--linha);transition:background .3s}
+.regua .passo.feito{background:var(--cal-fraco)}
+.regua .passo.agora{background:var(--cal)}
+.regua button{background:none;border:1px solid var(--linha);color:var(--cal-fraco);font-size:.76rem;padding:5px 10px;cursor:pointer}
+.regua button:hover{color:var(--cal);border-color:var(--cal-fraco)}
+.crono{min-width:4.6rem;text-align:right;font-weight:600;font-variant-numeric:tabular-nums}
+.crono.estourou{color:var(--cal);text-decoration:underline}
+body.aluno .regua{position:static;background:none;margin-bottom:64px}
+
+.notas{display:none;position:fixed;left:0;right:0;bottom:42px;background:var(--cal);color:var(--anil);
+  padding:11px clamp(14px,4vw,30px);font-family:var(--display);font-size:.88rem;font-weight:500;z-index:12}
+body.mostrar-notas .notas{display:block}
+
+body.aluno .palco{height:auto;overflow:visible}
+body.aluno .slide{position:static;display:none;padding:24px 18px 20px}
+body.aluno .slide.ativo{display:block}
+body.aluno h1{font-size:1.85rem}
+body.aluno .chip,body.aluno .entrada .qr,body.aluno .entrada .url,body.aluno .janela{display:none}
+.somente-aluno{display:none}
+body.aluno .somente-aluno{display:block}
+body.aluno .somente-projetor{display:none}
+
+body.roteiro .palco,body.roteiro .regua,body.roteiro .notas,body.roteiro #barraAluno{display:none}
+#roteiro{display:none;max-width:56rem;margin:0 auto;padding:36px 22px 80px}
+body.roteiro #roteiro{display:block}
+#roteiro h1{font-size:2.2rem;max-width:22ch}
+.bloco{border-top:1px solid var(--linha);padding:18px 0;display:grid;grid-template-columns:6rem 1fr;gap:20px;align-items:start}
+.bloco .quando{font-size:.85rem;color:var(--cal);font-weight:600}
+.bloco .quem{font-weight:600;font-size:1.06rem;margin-bottom:.15rem}
+.bloco .oque{color:var(--cal-fraco);font-size:.95rem;margin-bottom:.5rem}
+.bloco .inter{font-size:.9rem;border-left:2px solid var(--dende);padding-left:12px}
+.bloco .inter b{font-family:var(--display);font-size:.76rem;color:var(--dende);display:block}
+.total{font-family:var(--display);font-weight:600;margin:1.4rem 0 0}
+.mapa{display:grid;gap:8px;margin:1.1rem 0 2rem}
+.canal{display:grid;grid-template-columns:8rem 1fr;gap:14px;border-left:2px solid var(--linha);padding-left:14px;font-size:.94rem}
+.canal b{font-family:var(--display);font-size:.78rem;color:var(--cal-fraco)}
+
+@media (max-width:760px){ .bloco,.canal{grid-template-columns:1fr;gap:8px} }
+@media print{ body{background:#fff;color:#000} #roteiro{padding:0} .bloco .quando{color:#000} }
+@media (prefers-reduced-motion:reduce){ *{animation:none!important;transition:none!important} }
+:focus-visible{outline:2px solid var(--dende);outline-offset:3px}
+</style>
+</head>
+
+<body>
+<div class="palco" id="palco">
+
+<!-- 1 · ENTRADA -->
+<section class="slide" data-falante="A" data-tema="Entrada da turma" data-tempo="60"
+  data-interacao="Celular: só entrar. A primeira ação precisa ser barata."
+  data-nota="Fique calado enquanto o contador sobe. Quando parar: 'agora a sala inteira está na mão de vocês'.">
+  <div class="interno entrada">
+    <h1>Pegue o celular. É por ele que esta aula acontece.</h1>
+    <div class="qr"><span id="qr"></span></div>
+    <div class="url" id="qrUrl"></div>
+    <div class="contagem" id="contagem"></div>
+    <p class="sub somente-projetor oculto" id="semRede">Sem internet? Fica tudo por voto de mão levantada — o grupo conta.</p>
+    <p class="somente-aluno">Você está dentro. Deixe esta aba aberta: as perguntas aparecem aqui, e a legislação completa fica no fim. A qualquer momento, mande sua dúvida na barra de baixo — ela chega anônima na tela.</p>
+  </div>
+</section>
+<section class="slide" data-falante="A" data-tema="Enquete de abertura" data-tempo="90" data-pergunta="abertura" data-janela="1"
+  data-interacao="Celular: 4 opções, janela de 30s. Cada voto que chega pulsa na barra."
+  data-nota="Deixe a janela correr em silêncio e leia a sala: 'esse gráfico é o retrato da nossa própria formação'. Passa para B.">
+  <div class="interno">
+    <h2>Na sua vida escolar, quilombo apareceu como o quê?</h2>
+    <div class="janela somente-projetor"><div class="trilho"><i></i></div><span class="txt"></span></div>
+    <div class="opcoes" data-enquete="abertura">
+      <button class="opcao" data-opcao="Só escravidão"><b>Só no capítulo da escravidão</b><span class="barra"><i></i></span><span class="n"></span></button>
+      <button class="opcao" data-opcao="Só 20 de novembro"><b>Só na semana do 20 de novembro</b><span class="barra"><i></i></span><span class="n"></span></button>
+      <button class="opcao" data-opcao="Presente e resistência"><b>Como comunidade viva, no presente</b><span class="barra"><i></i></span><span class="n"></span></button>
+      <button class="opcao" data-opcao="Não apareceu"><b>Não apareceu</b><span class="barra"><i></i></span><span class="n"></span></button>
+    </div>
+    <p class="status" data-status="abertura"></p>
+    <div class="devolutiva" data-devolutiva="abertura"></div>
+  </div>
+</section>
+<!-- CONCEITO -->
+<section class="slide" data-falante="B" data-tema="O conceito" data-tempo="120"
+  data-interacao="Tela: três linhas. O falante lê a primeira e pergunta à turma o que muda na escola antes de mostrar as outras duas."
+  data-nota="A frase do título é a tese do trabalho inteiro. Diga devagar e deixe assentar antes de ir para os marcos.">
+  <div class="interno">
+    <h2>Educação quilombola não é o que a escola leva até a comunidade. É o que a comunidade já produz.</h2>
+    <ul class="lista">
+      <li><span class="ref">Definição e origem</span><br><span class="oq">Saberes, conhecimentos e experiências produzidos, socializados e reinventados pelas próprias comunidades quilombolas.</span></li>
+      <li><span class="ref">O que muda na escola</span><br><span class="oq">Para atender à multidiversidade desses sujeitos, a escola precisa incorporar a relação direta com o território e com os saberes da ancestralidade.</span></li>
+      <li><span class="ref">A consequência</span><br><span class="oq">Educação escolar quilombola é a apropriação desses saberes pela escola — não a substituição deles pelo currículo de fora.</span></li>
+    </ul>
+  </div>
+</section>
+
+<section class="slide" data-falante="B" data-tema="Vídeo 1 — a trajetória" data-tempo="120" data-video="abertura"
+  data-interacao="Tela: vídeo curto. Depois, duas respostas faladas — não mais que duas."
+  data-nota="Não explique antes. Deixe rodar e faça a pergunta do quadro. Este vídeo já conta a trajetória — na linha do tempo, Carlos só abre 1988, 2012 e 2026.">
+  <div class="interno">
+    <h2>Como a educação quilombola chegou até aqui</h2>
+    <div class="moldura" data-slot="abertura"></div>
+    <div class="tarefa"><p><b>Depois do vídeo:</b> qual etapa dessa trajetória você nunca tinha ouvido falar na escola?</p></div>
+  </div>
+</section>
+<section class="slide" data-falante="B" data-tema="Linha do tempo da legislação" data-tempo="150"
+  data-interacao="Tela: anos clicáveis. A turma escolhe por qual começar."
+  data-nota="Pergunte por onde querem começar. Pare em 1988, 2012 e 2026; o resto é passagem.">
+  <div class="interno">
+    <h2>O direito à terra vem antes. O direito à escola vem atrás dele.</h2>
+    <div class="tempo" id="tempo" role="tablist"></div>
+    <button type="button" class="ano" id="modoTeste" style="margin-bottom:14px">Modo teste</button>
+    <div class="detalhe" id="detalhe"></div>
+  </div>
+</section>
+<section class="slide" data-falante="B" data-tema="O número e a cobertura" data-tempo="90"
+  data-interacao="Voz da turma: cresceu, caiu ou ficou igual? Só depois o falante revela os dois números."
+  data-nota="Pergunte antes de clicar: de 2007 a 2020, o número de escolas quilombolas subiu, caiu ou ficou igual? Depois revele.">
+  <div class="interno">
+    <h2>A lei existe desde 2012. E as escolas, cresceram?</h2>
+    <div class="colunas" id="colunas"></div>
+    <button type="button" class="ano somente-projetor" id="revelarEscolas">Revelar os números</button>
+    <div class="veredito oculto" id="vereditoEscolas">
+      <p>1.253 escolas quilombolas em 2007, 2.526 em 2020 — o número dobrou. O estudo que levanta esses dados avisa no mesmo trecho: quantidade de escolas não é parâmetro de avaliação. Sem qualidade de ensino, participação da comunidade e cultura dentro do currículo, dobrar o número não dobra o direito.</p>
+      <p class="sub">Soares, Rodrigues, Antunes e Nogueira (2024), com dados do Censo da Educação Básica — INEP/MEC.</p>
+    </div>
+  </div>
+</section>
+<section class="slide" data-falante="A" data-tema="Chute coletivo" data-tempo="120" data-pergunta="chute"
+  data-interacao="Celular: campo numérico. Na tela, a média da turma desliza na escala e o número real entra depois."
+  data-nota="Só revele quando a média parar de mexer. O erro coletivo é o argumento — não corrija ninguém.">
+  <div class="interno">
+    <h2>O Brasil tem 5.568 municípios. Em quantos existe população quilombola?</h2>
+    <div class="chute somente-aluno">
+      <input type="number" id="campoChute" inputmode="numeric" placeholder="seu número" min="0" max="5568">
+      <button type="button" id="enviarChute">Enviar meu chute</button>
+    </div>
+    <p class="status" data-status="chute"></p>
+    <div class="termo somente-projetor" id="termo">
+      <div class="marca media" id="marcaMedia" style="left:0">
+        <span class="valor">—</span><span class="rotulo">média da turma</span><span class="haste"></span>
+      </div>
+      <div class="marca real oculto" id="marcaReal" style="left:0">
+        <span class="valor">1.696</span><span class="rotulo">número real</span><span class="haste"></span>
+      </div>
+      <div class="escala"></div>
+      <div class="limites"><span>0</span><span>5.568 municípios</span></div>
+    </div>
+    <div class="veredito oculto" id="vereditoChute">
+      <p>Quase um em cada três municípios do país. Salvador é a segunda cidade em número absoluto de quilombolas, com 15.897 pessoas — a rede urbana também está sob a norma.</p>
+    </div>
+    <button type="button" class="ano somente-projetor" id="revelar" style="margin-top:14px">Revelar o número real</button>
+  </div>
+</section>
+<section class="slide" data-falante="A" data-tema="Curiosidades do Censo 2022" data-tempo="90"
+  data-interacao="Tela: cinco cartas. O número sobe de zero quando o falante clica — a sala responde antes em voz alta."
+  data-nota="Peça a resposta falada antes de virar cada carta. Se você adianta o número, perde o efeito.">
+  <div class="interno">
+    <h2>Até 2022, o Brasil não sabia quantos quilombolas tinha</h2>
+    <p class="sub">Pergunte à turma antes de virar cada carta.</p>
+    <div class="grade" id="curiosidades"></div>
+  </div>
+</section>
+<section class="slide" data-falante="C" data-tema="Resolução 8/2012 — as seis exigências" data-tempo="120"
+  data-interacao="Tela: leitura conduzida. Sem interação — é o respiro entre dois blocos participativos."
+  data-nota="Coração do trabalho. Se o tempo apertar, corte o vídeo 2, nunca este slide.">
+  <div class="interno">
+    <h2>Resolução CNE/CEB nº 8/2012: seis exigências que mudam a rotina da escola</h2>
+    <ul class="lista">
+      <li><span class="ref">Pedagogia própria</span><br><span class="oq">Respeito à especificidade étnico-racial e cultural de cada comunidade. Não é adaptar o currículo urbano: é partir de outro lugar.</span></li>
+      <li><span class="ref">Docente com formação específica</span><br><span class="oq">Formação inicial e continuada voltada à realidade quilombola, com material didático produzido no contexto.</span></li>
+      <li><span class="ref">O trabalho como princípio educativo</span><br><span class="oq">A roça, o ofício e o fazer da comunidade entram como conteúdo, não como ilustração.</span></li>
+      <li><span class="ref">Tempos e espaços próprios de aprender</span><br><span class="oq">Reconhecimento dos lugares e dos ciclos em que crianças, jovens e idosos quilombolas se educam — calendário inclusive.</span></li>
+      <li><span class="ref">A língua da comunidade dentro da sala</span><br><span class="oq">Uso da Língua Portuguesa em diálogo com as línguas locais: falares, variedades e línguas crioulas entram como patrimônio, não como erro a corrigir.</span></li>
+      <li><span class="ref">Vale também fora do território</span><br><span class="oq">A norma alcança as escolas que recebem estudantes quilombolas longe de suas comunidades. É aqui que a rede urbana descobre que a lei é com ela.</span></li>
+    </ul>
+  </div>
+</section>
+<section class="slide" data-falante="C" data-tema="Vídeo 2 — a escola por dentro" data-tempo="120" data-video="escola"
+  data-interacao="Tela: vídeo com tarefa dada antes do play."
+  data-nota="Dê a tarefa ANTES do play. Sem tarefa, o vídeo vira pausa para o celular.">
+  <div class="interno">
+    <h2>Antes do play: anote uma cena que contraria alguma das cinco exigências</h2>
+    <div class="moldura" data-slot="escola"></div>
+    <div class="tarefa"><p><b>Depois do vídeo:</b> o que você anotou? Vamos comparar com a lista do próximo slide.</p></div>
+  </div>
+</section>
+<section class="slide" data-falante="C" data-tema="Norma × prática" data-tempo="120"
+  data-interacao="Tela: cinco pares. Ao clicar, a barra verde vira ocre na frente da sala."
+  data-nota="Um par por vez. Três já dói — não precisa dos cinco.">
+  <div class="interno">
+    <h2>Clique em cada exigência para ver o que acontece na prática</h2>
+    <div class="legenda">
+      <span><i style="background:var(--roca)"></i>o que a lei garante</span>
+      <span><i style="background:var(--ocre)"></i>o que a escola entrega</span>
+    </div>
+    <div class="pares" id="pares"></div>
+  </div>
+</section>
+<section class="slide" data-falante="C" data-tema="Caso para votar" data-tempo="120" data-pergunta="caso" data-janela="1"
+  data-interacao="Celular: votação com janela de 30s. Devolutiva pessoal no aparelho, resposta correta na tela."
+  data-nota="Deixe votar antes de comentar. A resposta é sim — é o que liga a lei à escola de Brasília.">
+  <div class="interno">
+    <h2>Uma escola urbana de Brasília recebe 12 estudantes vindos de um território quilombola. A Resolução 8/2012 se aplica a ela?</h2>
+    <div class="janela somente-projetor"><div class="trilho"><i></i></div><span class="txt"></span></div>
+    <div class="opcoes" data-enquete="caso">
+      <button class="opcao" data-opcao="Sim" data-certa="1"><b>Sim, integralmente</b><span class="barra"><i></i></span><span class="n"></span></button>
+      <button class="opcao" data-opcao="Não"><b>Não, só a escolas dentro do território</b><span class="barra"><i></i></span><span class="n"></span></button>
+      <button class="opcao" data-opcao="Só projeto"><b>Só como projeto no 20 de novembro</b><span class="barra"><i></i></span><span class="n"></span></button>
+    </div>
+    <p class="status" data-status="caso"></p>
+    <div class="devolutiva" data-devolutiva="caso"></div>
+    <div class="veredito oculto" id="vereditoCaso">
+      <p><b>Sim.</b> A modalidade vale nas escolas quilombolas <em>e</em> nas que recebem estudantes oriundos de territórios quilombolas, atravessando toda a Educação Básica, mais EJA, Educação Especial, Educação Profissional Técnica de Nível Médio e EaD.</p>
+    </div>
+  </div>
+</section>
+<section class="slide" data-falante="Todos" data-tema="Nuvem final" data-tempo="90" data-pergunta="palavra"
+  data-interacao="Celular: uma palavra. Ela aparece na tela no instante em que é enviada; repetição aumenta o tamanho."
+  data-nota="Peça uma palavra só. Leia em voz alta as que crescerem — é a síntese da turma, não a de vocês.">
+  <div class="interno">
+    <h2>Uma palavra: o que você leva daqui?</h2>
+    <div class="chute somente-aluno">
+      <input type="text" id="campoPalavra" maxlength="18" placeholder="uma palavra">
+      <button type="button" id="enviarPalavra">Mandar para a tela</button>
+    </div>
+    <p class="status" data-status="palavra"></p>
+    <div class="nuvem somente-projetor" id="nuvem"></div>
+  </div>
+</section>
+<section class="slide" data-falante="Todos" data-tema="Fechamento" data-tempo="60"
+  data-interacao="Voz: cada integrante lê uma pergunta. As dúvidas anônimas entram aqui (tecla P)."
+  data-nota="Uma pergunta por integrante. Depois aperte P e responda as dúvidas que chegaram.">
+  <div class="interno">
+    <h2>Três perguntas para levar para o estágio</h2>
+    <ul class="lista">
+      <li><span class="ref">O PPP da escola cita a comunidade pelo nome?</span><br><span class="oq">Ou fala de "diversidade" sem endereço.</span></li>
+      <li><span class="ref">Quem foi consultado antes de decidir o calendário?</span><br><span class="oq">Consulta prévia não é reunião de informe.</span></li>
+      <li><span class="ref">O material mostra quilombo vivo ou quilombo extinto?</span><br><span class="oq">Passado é conteúdo. Presente é reconhecimento.</span></li>
+    </ul>
+    <p style="margin-top:1.4rem"><span class="somente-aluno">A legislação completa está na próxima tela — ela fica com você.</span><span class="somente-projetor">A legislação completa já está no celular de quem entrou.</span></p>
+  </div>
+</section>
+<section class="slide" data-falante="—" data-tema="Material de consulta" data-tempo="0"
+  data-interacao="Celular: fica aberto depois da apresentação."
+  data-nota="Deixe projetado durante as perguntas da turma.">
+  <div class="interno">
+    <h2>Para explorar depois</h2>
+    <ul class="lista neutra">
+      <li><span class="ref">CF/88, art. 68 do ADCT</span><br><span class="oq">Direito das comunidades remanescentes de quilombo à titulação do território.</span></li>
+      <li><span class="ref">Decreto nº 4.887/2003</span><br><span class="oq">Identificação, reconhecimento e titulação dos territórios.</span></li>
+      <li><span class="ref">Convenção 169 da OIT — Decreto nº 10.088/2019</span><br><span class="oq">Autoidentificação e consulta prévia, livre e informada.</span></li>
+      <li><span class="ref">Lei nº 10.639/2003 e Lei nº 11.645/2008 — LDB, art. 26-A</span><br><span class="oq">História e cultura afro-brasileira e indígena no currículo.</span></li>
+      <li><span class="ref">Parecer CNE/CP nº 3/2004 e Resolução CNE/CP nº 1/2004</span><br><span class="oq">Diretrizes para a Educação das Relações Étnico-Raciais.</span></li>
+      <li><span class="ref">Lei nº 12.288/2010</span><br><span class="oq">Estatuto da Igualdade Racial, capítulo da educação.</span></li>
+      <li><span class="ref">Parecer CNE/CEB nº 16/2012 + Resolução CNE/CEB nº 8/2012</span><br><span class="oq">O núcleo: as Diretrizes Curriculares Nacionais para a Educação Escolar Quilombola.</span></li>
+      <li><span class="ref">Lei nº 14.113/2020</span><br><span class="oq">FUNDEB, com ponderação específica para escola quilombola.</span></li>
+      <li><span class="ref">Lei nº 15.388/2026</span><br><span class="oq">Novo PNE (2026–2036), com objetivo próprio para educação escolar indígena, do campo e quilombola.</span></li>
+      <li><span class="ref">Soares, Rodrigues, Antunes e Nogueira (2024)</span><br><span class="oq">"Desafios e perspectivas da Educação Escolar Quilombola no Brasil", Revista Território e Cidadania, n. 3, v. 1, e3604. De onde vem o dado das escolas.</span></li>
+      <li><span class="ref">Inventário Nacional da Diversidade Linguística (INDL)</span><br><span class="oq">Reconhece falares de comunidades remanescentes de quilombos e línguas crioulas como patrimônio a documentar e valorizar.</span></li>
+      <li><span class="ref">Portaria MEC nº 470, de 14/05/2024 — PNEERQ</span><br><span class="oq">Política Nacional de Equidade, Educação para as Relações Étnico-Raciais e Educação Escolar Quilombola.</span></li>
+      <li><span class="ref">Declaração e Plano de Ação de Durban (2001)</span><br><span class="oq">III Conferência Mundial contra o Racismo, assinada pelo Brasil.</span></li>
+      <li><span class="ref">Censo Demográfico 2022 — IBGE</span><br><span class="oq">Primeiro levantamento oficial da população quilombola do país.</span></li>
+    </ul>
+  </div>
+</section>
+
+<!-- 2 · ENQUETE -->
+
+<!-- 3 · VÍDEO 1 -->
+
+<!-- 4 · CURIOSIDADES -->
+
+<!-- 5 · CHUTE -->
+
+<!-- 6 · LINHA DO TEMPO -->
+
+<!-- 6b · ESCOLAS -->
+
+<!-- 7 · RESOLUÇÃO -->
+
+<!-- 8 · VÍDEO 2 -->
+
+<!-- 9 · NORMA × PRÁTICA -->
+
+<!-- 10 · CASO -->
+
+<!-- 11 · NUVEM -->
+
+<!-- 12 · FECHAMENTO -->
+
+<!-- 13 · MATERIAL -->
+
+</div>
+
+<aside id="duvidas"><h3>Dúvidas da turma (anônimas)</h3><ul id="listaDuvidas"></ul></aside>
+<div class="aviso-duvida" id="avisoDuvida"></div>
+
+<div id="barraAluno">
+  <input type="text" id="campoDuvida" maxlength="140" placeholder="mande uma dúvida anônima">
+  <button type="button" id="enviarDuvida">Enviar</button>
+</div>
+
+<div id="roteiro">
+  <p class="sub">Documento de ensaio — não é projetado</p>
+  <h1>Roteiro e mapa de interação</h1>
+  <p>Cada bloco tem um dono. Quem não fala opera a tela, lê a sala ou acompanha as dúvidas (tecla P).</p>
+
+  <h2 style="margin-top:2rem">Sistema de cor e de movimento</h2>
+  <div class="mapa">
+    <div class="canal"><b>Dendê</b><span>Só ação do público: entrar, votar, chutar, mandar palavra.</span></div>
+    <div class="canal"><b>Verde roça</b><span>Só o que a lei garante.</span></div>
+    <div class="canal"><b>Ocre de cerrado</b><span>Só o que a escola entrega. A barra do par vira ocre ao ser clicada.</span></div>
+    <div class="canal"><b>Movimento</b><span>Nada anima sozinho. Cada efeito responde a um evento real: voto que chegou, carta virada, palavra enviada.</span></div>
+    <div class="canal"><b>Proibido</b><span>Padrão africano decorativo, verde-amarelo-vermelho, imagem de corrente. A apresentação acusa a folclorização — não pode cometê-la no slide.</span></div>
+  </div>
+
+  <h2>Mapa de interação</h2>
+  <div class="mapa">
+    <div class="canal"><b>Celular</b><span>5 entradas: entrar, enquete, chute, caso, palavra final. Mais a barra de dúvida anônima, aberta o tempo todo.</span></div>
+    <div class="canal"><b>Tela</b><span>Revelação no clique: anos, cartas com contagem crescente, pares que mudam de cor.</span></div>
+    <div class="canal"><b>Vídeo</b><span>2 entradas, cada uma com tarefa antes do play e pergunta depois.</span></div>
+    <div class="canal"><b>Voz da turma</b><span>Resposta falada antes de cada carta e depois de cada vídeo.</span></div>
+    <div class="canal"><b>Ritmo</b><span>Participação → exposição → participação. Nenhum bloco expositivo passa de 4 min.</span></div>
+  </div>
+
+  <h2>Falas dos marcos</h2>
+  <p class="sub">O que está na tela é a frase curta. Isto aqui é o que se diz em voz alta — não leia o slide.</p>
+  <div id="falasMarcos"></div>
+
+  <h2>Divisão de fala</h2>
+  <div id="blocos"></div>
+  <p class="total" id="totalTempo"></p>
+  <p class="sub">Como está, o roteiro pede 24,5 min. Para caber em 20: corte o vídeo 2 e as curiosidades do Censo, e reduza norma × prática a três pares. Não corte o conceito, a Resolução 8/2012, o caso final nem a nuvem.</p>
+</div>
+
+<div class="notas" id="notas"></div>
+
+<div class="regua">
+  <button id="btnVoltar" type="button">Voltar</button>
+  <div class="passos" id="passos"></div>
+  <button id="btnAvancar" type="button">Avançar</button>
+  <span class="crono" id="crono"></span>
+  <span id="contador"></span>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/qrcode-generator@1.4.4/qrcode.js"></script>
+<script>
+(function(){
+  const params = new URLSearchParams(location.search);
+  const MODO = params.get("modo"), SALA = params.get("sala") || "pedagogia";
+  const slides = Array.from(document.querySelectorAll(".slide"));
+  const passos = document.getElementById("passos"), notas = document.getElementById("notas");
+  const contador = document.getElementById("contador"), crono = document.getElementById("crono");
+  const suave = !window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+  let atual = 0, resta = 0, rodando = true, tick = null, sb = null, janela = null;
+
+  if (MODO === "aluno") document.body.classList.add("aluno");
+  if (MODO === "roteiro") document.body.classList.add("roteiro");
+  const nome = f => GRUPO[f] || f;
+  const fmtN = n => Number(n).toLocaleString("pt-BR");
+
+  slides.forEach(s => {
+    const f = s.dataset.falante;
+    if (!f || f === "—") return;
+    const chip = document.createElement("div");
+    chip.className = "chip"; chip.append(nome(f));
+    const sp = document.createElement("span"); sp.textContent = s.dataset.tema || "";
+    chip.appendChild(sp); s.querySelector(".interno").prepend(chip);
+  });
+
+  const formata = s => (s < 0 ? "−" : "") + Math.floor(Math.abs(s)/60) + ":" + String(Math.abs(s)%60).padStart(2,"0");
+  function pinta(){ crono.classList.toggle("estourou", resta <= 0); crono.textContent = formata(resta); }
+  function iniciaCrono(seg){
+    clearInterval(tick);
+    if (!seg || MODO === "aluno"){ crono.textContent = ""; return; }
+    resta = seg; rodando = true; pinta();
+    tick = setInterval(() => { if (rodando){ resta--; pinta(); } }, 1000);
+  }
+
+  /* janela de votação — informa, não bloqueia */
+  function abreJanela(slide){
+    clearInterval(janela);
+    const cx = slide.querySelector(".janela");
+    if (!cx || MODO === "aluno") return;
+    const barra = cx.querySelector("i"), txt = cx.querySelector(".txt");
+    let s = JANELA_VOTO;
+    const passo = () => {
+      barra.style.width = (s / JANELA_VOTO * 100) + "%";
+      txt.textContent = s > 0 ? "janela de votação · " + s + "s" : "janela encerrada — quem não votou ainda pode votar";
+      if (s-- <= 0) clearInterval(janela);
+    };
+    passo(); janela = setInterval(passo, 1000);
+  }
+
+  slides.forEach(() => passos.appendChild(Object.assign(document.createElement("div"),{className:"passo"})));
+  function ir(i){
+    atual = Math.max(0, Math.min(slides.length-1, i));
+    slides.forEach((s,n) => s.classList.toggle("ativo", n === atual));
+    Array.from(passos.children).forEach((p,n) => {
+      p.classList.toggle("feito", n < atual); p.classList.toggle("agora", n === atual);
+    });
+    const s = slides[atual];
+    notas.textContent = (s.dataset.falante ? nome(s.dataset.falante)+": " : "") + (s.dataset.nota || "");
+    contador.textContent = (atual+1)+"/"+slides.length;
+    s.scrollTop = 0; if (MODO === "aluno") window.scrollTo(0,0);
+    iniciaCrono(parseInt(s.dataset.tempo || "0", 10));
+    pararVideos();
+    if (s.dataset.janela) abreJanela(s);
+    if (s.dataset.pergunta) carregar(s.dataset.pergunta);
+  }
+  document.getElementById("btnAvancar").onclick = () => ir(atual+1);
+  document.getElementById("btnVoltar").onclick = () => ir(atual-1);
+  document.addEventListener("keydown", e => {
+    if (document.body.classList.contains("roteiro") || e.target.tagName === "INPUT") return;
+    const k = e.key.toLowerCase();
+    if (["ArrowRight","PageDown"," "].includes(e.key)){ e.preventDefault(); ir(atual+1); }
+    if (["ArrowLeft","PageUp"].includes(e.key)){ e.preventDefault(); ir(atual-1); }
+    if (k === "n") document.body.classList.toggle("mostrar-notas");
+    if (k === "t") rodando = !rodando;
+    if (k === "r") abreJanela(slides[atual]);
+    if (k === "p"){ document.body.classList.toggle("ver-duvidas"); document.getElementById("avisoDuvida").classList.remove("on"); }
+    if (k === "f") document.fullscreenElement ? document.exitFullscreen() : document.documentElement.requestFullscreen?.();
+  });
+
+  function pararVideos(){ document.querySelectorAll(".moldura iframe").forEach(f => f.src = f.src); }
+  Object.keys(VIDEOS).forEach(chave => {
+    const alvo = document.querySelector('[data-slot="'+chave+'"]'); if (!alvo) return;
+    const v = VIDEOS[chave];
+    if (v.id){
+      alvo.innerHTML = '<iframe allow="accelerometer; clipboard-write; encrypted-media; picture-in-picture" allowfullscreen></iframe>';
+      alvo.querySelector("iframe").src = "https://www.youtube-nocookie.com/embed/"+v.id+"?rel=0&modestbranding=1";
+    } else {
+      alvo.innerHTML = '<div class="vazio"><b>Vídeo ainda não escolhido</b><div>'+v.titulo+' · '+v.duracao+
+        '</div><div style="font-size:.85rem;max-width:34ch;margin:0 auto">Critério: quilombola falando em primeira pessoa, menos de 4 minutos, mostrando o presente. Cole o ID do YouTube em VIDEOS, no topo do arquivo.</div></div>';
+    }
+  });
+
+  const LINHA = [
+    { ano:"1988", norma:"Constituição de 1988 — art. 242 e art. 68 do ADCT",
+      txt:"Currículo e território entram na mesma Constituição.",
+      fala:"O artigo 242 estabeleceu que o ensino da história do Brasil deve levar em conta a contribuição das diferentes culturas e etnias na formação do povo brasileiro. E o artigo 68 do ADCT reconheceu às comunidades remanescentes de quilombos a propriedade definitiva de suas terras. Currículo e território na mesma Constituição: é daí que tudo parte." },
+    { ano:"1996", norma:"LDB — Lei nº 9.394",
+      txt:"Consolida o princípio constitucional voltado à diversidade cultural.",
+      fala:"A Lei de Diretrizes e Bases da Educação Nacional consolidou o princípio constitucional voltado à diversidade cultural. É nela que, sete anos depois, será enxertado o artigo 26-A." },
+    { ano:"2001", norma:"III Conferência Mundial contra o Racismo — Durban",
+      txt:"O Brasil assume compromisso internacional contra o racismo.",
+      fala:"Na III Conferência Mundial contra o Racismo, em Durban, na África do Sul, o Brasil assinou a declaração e o plano de ação, firmando o compromisso de combater o racismo, a discriminação racial, a xenofobia e as intolerâncias correlatas. É a pressão que destrava a Lei 10.639 dois anos depois." },
+    { ano:"2003", norma:"Lei nº 10.639 e Decreto nº 4.887",
+      txt:"História e Cultura Afro-Brasileira viram obrigação. E os territórios ganham procedimento de titulação.",
+      fala:"A Lei 10.639 tornou obrigatório o ensino de História e Cultura Africana e Afro-Brasileira na Educação Básica, com foco na Educação das Relações Étnico-Raciais. No mesmo ano, o Decreto 4.887 criou o procedimento de identificação, reconhecimento e titulação dos territórios quilombolas." },
+    { ano:"2008", norma:"Lei nº 11.645",
+      txt:"Acrescenta a temática indígena ao art. 26-A da LDB.",
+      fala:"A Lei 11.645 acrescentou a temática indígena ao artigo 26-A. O currículo obrigatório passa a ter duas frentes: afro-brasileira e indígena." },
+    { ano:"2010", norma:"Lei nº 12.288 — Estatuto da Igualdade Racial",
+      txt:"Consolida direitos e traz um capítulo próprio de educação.",
+      fala:"O Estatuto da Igualdade Racial consolidou direitos e trouxe um capítulo próprio de educação. Ainda sem norma específica para a escola quilombola — ela vem dois anos depois." },
+    { ano:"2012", norma:"Parecer CNE/CEB nº 16 e Resolução CNE/CEB nº 8",
+      txt:"Nasce a modalidade Educação Escolar Quilombola.",
+      fala:"As Diretrizes Curriculares Nacionais para a Educação Escolar Quilombola foram definidas graças ao protagonismo e à mobilização do movimento quilombola, com audiências públicas e participação das organizações. É a norma que cria a modalidade — e é o centro do nosso trabalho." },
+    { ano:"2020", norma:"Lei nº 14.113 — novo FUNDEB",
+      txt:"Ponderação específica para matrícula em escola quilombola.",
+      fala:"O novo FUNDEB criou fator de ponderação específico para a matrícula em escola quilombola. Sem dinheiro carimbado, diretriz não sai do papel." },
+    { ano:"2022", norma:"Censo Demográfico — IBGE",
+      txt:"Pela primeira vez o país conta sua população quilombola.",
+      fala:"Não é lei, mas muda tudo: em 2022, pela primeira vez, o Censo contou a população quilombola do Brasil. Sem dado não há meta, e sem meta não há política." },
+    { ano:"2024", norma:"PNEERQ — Portaria MEC nº 470",
+      txt:"Sete eixos e R$ 1,5 bilhão até 2027 para consolidar a modalidade.",
+      fala:"A Política Nacional de Equidade, Educação para as Relações Étnico-Raciais e Educação Escolar Quilombola foi instituída pela Portaria 470, de 14 de maio de 2024, elaborada a partir de intensos debates e da participação ativa de lideranças quilombolas. São sete eixos e 1,5 bilhão de reais até 2027, com o objetivo declarado de consolidar a modalidade." },
+    { ano:"2026", norma:"Lei nº 15.388 — novo PNE (2026–2036)",
+      txt:"Objetivo próprio para a educação escolar indígena, do campo e quilombola.",
+      fala:"O novo Plano Nacional de Educação foi sancionado sem vetos, com 19 objetivos, 73 metas e 372 estratégias, e traz objetivo próprio para a educação escolar indígena, do campo e quilombola. É o que está em vigor agora." }
+  ];
+  const tempo = document.getElementById("tempo"), detalhe = document.getElementById("detalhe");
+  let teste = false;
+  function mostraMarco(item, escondido){
+    detalhe.innerHTML = '<div class="norma"></div><p></p>';
+    detalhe.querySelector(".norma").textContent = escondido
+      ? "O que mudou em " + item.ano + "?"
+      : item.norma;
+    detalhe.querySelector("p").textContent = escondido
+      ? "Qual norma \u00e9 essa e o que ela passou a exigir? Pergunte \u00e0 turma antes de revelar."
+      : item.txt;
+    if (escondido){
+      const r = document.createElement("button");
+      r.className = "ano"; r.type = "button"; r.textContent = "Revelar";
+      r.onclick = () => mostraMarco(item, false);
+      detalhe.appendChild(r);
+    }
+    detalhe.classList.remove("entrando"); void detalhe.offsetWidth; detalhe.classList.add("entrando");
+  }
+  const btnTeste = document.getElementById("modoTeste");
+  if (btnTeste) btnTeste.onclick = () => {
+    teste = !teste;
+    btnTeste.setAttribute("aria-selected", teste ? "true" : "false");
+    btnTeste.textContent = teste ? "Modo teste ligado \u00b7 clique num ano" : "Modo teste";
+    const sel = Array.from(tempo.children).find(x => x.getAttribute("aria-selected") === "true");
+    if (sel) sel.click();
+  };
+
+  LINHA.forEach((item,i) => {
+    const b = document.createElement("button");
+    b.className = "ano"; b.type = "button"; b.textContent = item.ano; b.setAttribute("role","tab");
+    b.onclick = () => {
+      Array.from(tempo.children).forEach(x => x.setAttribute("aria-selected","false"));
+      b.setAttribute("aria-selected","true");
+      mostraMarco(item, teste);
+    };
+    tempo.appendChild(b); if (i === 0) b.click();
+  });
+
+  /* cartas com contagem crescente */
+  const CURIOSIDADES = [
+    { p:"Em que ano o Brasil contou quilombolas pela primeira vez em um Censo?", alvo:2022, sufixo:"", bruto:"2022", v:"O Censo Demográfico 2022 foi o primeiro levantamento oficial da população quilombola do país." },
+    { p:"Quantos quilombolas vivem no Brasil?", alvo:1327802, sufixo:"", v:"1.327.802 pessoas, 0,65% da população brasileira." },
+    { p:"Qual cidade tem a maior proporção de quilombolas?", alvo:84.6, sufixo:"%", casas:1, v:"Alcântara, no Maranhão: 84,6% da população do município é quilombola." },
+    { p:"Quantas localidades quilombolas existem no país?", alvo:8441, sufixo:"", v:"8.441 localidades, ligadas a 7.666 comunidades declaradas. O Maranhão concentra 2.025 delas." },
+    { p:"Qual estado concentra mais quilombolas?", texto:"Bahia", v:"397.059 pessoas, 29,9% do total. Com o Maranhão, os dois somam metade da população quilombola do país." }
+  ];
+  function conta(el, alvo, casas, sufixo, bruto){
+    if (!suave){ el.textContent = (bruto || fmtN(alvo)) + sufixo; return; }
+    const dur = 900, ini = performance.now();
+    const passo = t => {
+      const p = Math.min(1, (t-ini)/dur), e = 1-Math.pow(1-p,3), v = alvo*e;
+      el.textContent = (bruto ? Math.round(v) : (casas ? v.toFixed(casas).replace(".",",") : fmtN(Math.round(v)))) + sufixo;
+      if (p < 1) requestAnimationFrame(passo);
+    };
+    requestAnimationFrame(passo);
+  }
+  const grade = document.getElementById("curiosidades");
+  CURIOSIDADES.forEach(c => {
+    const b = document.createElement("button");
+    b.className = "carta"; b.type = "button";
+    b.innerHTML = '<span class="frente"></span><span class="dado"></span><span class="verso"></span>';
+    b.querySelector(".frente").textContent = c.p;
+    b.querySelector(".verso").textContent = c.v;
+    b.onclick = () => {
+      const abriu = !b.classList.contains("aberta");
+      b.classList.toggle("aberta");
+      const d = b.querySelector(".dado");
+      if (!abriu) return;
+      if (c.texto) d.textContent = c.texto;
+      else conta(d, c.alvo, c.casas, c.sufixo, c.bruto);
+    };
+    grade.appendChild(b);
+  });
+
+  /* colunas: escolas quilombolas 2007 x 2020 */
+  const ESCOLAS = [{ano:"2007", v:1253},{ano:"2020", v:2526}];
+  const colunas = document.getElementById("colunas");
+  if (colunas) ESCOLAS.forEach(e => {
+    const d = document.createElement("div");
+    d.className = "coluna";
+    d.innerHTML = '<span class="num">?</span><span class="haste"></span><span class="ano-rot">'+e.ano+'</span>';
+    colunas.appendChild(d);
+  });
+  const btnEscolas = document.getElementById("revelarEscolas");
+  if (btnEscolas) btnEscolas.onclick = () => {
+    Array.from(colunas.children).forEach((d,i) => {
+      const e = ESCOLAS[i];
+      d.classList.add("cheia");
+      d.querySelector(".haste").style.height = Math.round(e.v/2526*190) + "px";
+      conta(d.querySelector(".num"), e.v, 0, "");
+    });
+    document.getElementById("vereditoEscolas").classList.remove("oculto");
+    btnEscolas.disabled = true;
+  };
+
+  const PARES = [
+    { n:"A escola deve ter pedagogia própria, ligada ao território.", r:"Chega o mesmo currículo da cidade, com o mesmo livro, no mesmo calendário." },
+    { n:"O quadro docente precisa de formação específica.", r:"Professor de fora, sem formação na temática, e rotatividade a cada ano letivo." },
+    { n:"O material didático deve ser produzido no contexto da comunidade.", r:"Quilombo aparece no capítulo da escravidão e volta na semana do 20 de novembro." },
+    { n:"Alimentação e infraestrutura devem respeitar a cultura alimentar do grupo.", r:"Cardápio padronizado, definido a centenas de quilômetros dali." },
+    { n:"A Língua Portuguesa deve dialogar com as línguas e falares da comunidade.", r:"A variedade linguística da criança é marcada de vermelho na prova como erro de português." },
+    { n:"A comunidade participa da gestão e do projeto pedagógico.", r:"Escola nucleada na sede do município e criança de seis anos em uma hora de transporte." }
+  ];
+  const pares = document.getElementById("pares");
+  PARES.forEach(p => {
+    const b = document.createElement("button");
+    b.className = "par"; b.type = "button";
+    b.innerHTML = '<span class="norma"></span><span class="marca">o que a lei garante — clique para ver o que a escola entrega</span><span class="real"></span>';
+    b.querySelector(".norma").textContent = p.n;
+    b.querySelector(".real").textContent = p.r;
+    b.onclick = () => {
+      b.classList.toggle("aberto");
+      b.querySelector(".marca").textContent = b.classList.contains("aberto")
+        ? "o que a escola entrega" : "o que a lei garante — clique para ver o que a escola entrega";
+    };
+    pares.appendChild(b);
+  });
+
+  const falasMarcos = document.getElementById("falasMarcos");
+  if (falasMarcos) LINHA.forEach(item => {
+    const d = document.createElement("div");
+    d.className = "bloco";
+    d.innerHTML = '<div class="quando"></div><div><div class="quem"></div><div class="oque"></div></div>';
+    d.querySelector(".quando").textContent = item.ano;
+    d.querySelector(".quem").textContent = item.norma;
+    d.querySelector(".oque").textContent = item.fala;
+    falasMarcos.appendChild(d);
+  });
+
+  const blocos = document.getElementById("blocos");
+  let acumulado = 0, total = 0;
+  slides.forEach(s => {
+    const seg = parseInt(s.dataset.tempo || "0", 10);
+    const ini = acumulado; acumulado += seg; total += seg;
+    const div = document.createElement("div"); div.className = "bloco";
+    div.innerHTML = '<div class="quando"></div><div><div class="quem"></div><div class="oque"></div><div class="inter"><b>Interação</b><span></span></div></div>';
+    div.querySelector(".quando").textContent = seg ? formata(ini)+" → "+formata(acumulado) : "livre";
+    div.querySelector(".quem").textContent = nome(s.dataset.falante || "—")+" · "+(s.dataset.tema || "");
+    div.querySelector(".oque").textContent = s.dataset.nota || "";
+    div.querySelector(".inter span").textContent = s.dataset.interacao || "";
+    blocos.appendChild(div);
+  });
+  document.getElementById("totalTempo").textContent = "Tempo total previsto: "+formata(total)+" min, sem as perguntas da turma.";
+
+  const urlAluno = location.origin + location.pathname + "?modo=aluno&sala=" + encodeURIComponent(SALA);
+  document.getElementById("qrUrl").textContent = urlAluno.replace(/^https?:\/\//,"");
+  try { const q = qrcode(0,"M"); q.addData(urlAluno); q.make(); document.getElementById("qr").innerHTML = q.createImgTag(6,0); }
+  catch(e){ document.getElementById("qr").textContent = "Digite o endereço abaixo."; }
+
+  /* ---------- dados ---------- */
+  const respondido = {}, escolha = {}, anterior = {};
+  const vistas = new Set();
+  const veredito = { caso:"vereditoCaso" };
+  const msg = (p,t) => { const el = document.querySelector('[data-status="'+p+'"]'); if (el) el.textContent = t; };
+
+  function desenhar(p, c){
+    const bloco = document.querySelector('[data-enquete="'+p+'"]'); if (!bloco) return;
+    const soma = Object.values(c).reduce((a,b)=>a+b,0) || 0;
+    bloco.querySelectorAll(".opcao").forEach(op => {
+      const k = op.dataset.opcao, n = c[k] || 0;
+      const pct = soma ? Math.round(n/soma*100) : 0;
+      op.querySelector(".barra i").style.width = pct+"%";
+      op.querySelector(".n").textContent = soma ? n+" · "+pct+"%" : "";
+      const chave = p+"|"+k;
+      if (anterior[chave] !== undefined && n > anterior[chave] && suave){
+        op.classList.add("chegou"); setTimeout(() => op.classList.remove("chegou"), 600);
+      }
+      anterior[chave] = n;
+    });
+    if (soma) msg(p, soma + (soma === 1 ? " resposta" : " respostas"));
+    if (escolha[p] && soma){
+      const meu = Math.round((c[escolha[p]] || 0)/soma*100);
+      const dev = document.querySelector('[data-devolutiva="'+p+'"]');
+      if (dev){
+        dev.classList.add("on");
+        dev.textContent = meu >= 50 ? "Você respondeu como "+meu+"% da turma."
+                                    : "Você está com os "+meu+"% que responderam diferente da maioria.";
+      }
+    }
+  }
+
+  function poeNuvem(lista){
+    const alvo = document.getElementById("nuvem"); if (!alvo) return;
+    const c = {}; lista.forEach(w => { const k = w.trim().toLowerCase(); if (k) c[k] = (c[k]||0)+1; });
+    const max = Math.max(1, ...Object.values(c));
+    alvo.innerHTML = "";
+    Object.entries(c).sort((a,b) => b[1]-a[1]).forEach(([w,n]) => {
+      const s = document.createElement("span");
+      s.className = "palavra " + (n/max > .66 ? "n3" : n/max > .33 ? "n2" : "n1");
+      s.textContent = w;
+      alvo.appendChild(s);
+    });
+    msg("palavra", lista.length + (lista.length === 1 ? " palavra na tela" : " palavras na tela"));
+  }
+
+  async function carregar(p){
+    if (!sb) return;
+    const { data, error } = await sb.from("respostas").select("opcao").eq("sala",SALA).eq("pergunta",p);
+    if (error || !data) return;
+    if (p === "chute"){
+      const nums = data.map(r => parseFloat(r.opcao)).filter(n => !isNaN(n));
+      if (!nums.length) return;
+      const media = Math.round(nums.reduce((a,b)=>a+b,0)/nums.length);
+      const m = document.getElementById("marcaMedia");
+      m.querySelector(".valor").textContent = fmtN(media);
+      m.style.left = Math.min(96, Math.max(4, media/5568*100)) + "%";
+      msg("chute", nums.length + (nums.length === 1 ? " chute enviado" : " chutes enviados"));
+      return;
+    }
+    if (p === "entrada"){
+      const c = document.getElementById("contagem");
+      const novo = data.length;
+      if (c.dataset.n && +c.dataset.n < novo && suave){ c.classList.remove("pulso"); void c.offsetWidth; c.classList.add("pulso"); }
+      c.dataset.n = novo;
+      c.innerHTML = novo + "<small>" + (novo === 1 ? "celular na sala" : "celulares na sala") + "</small>";
+      return;
+    }
+    if (p === "palavra"){ poeNuvem(data.map(r => r.opcao)); return; }
+    if (p === "duvida"){
+      const ul = document.getElementById("listaDuvidas");
+      ul.innerHTML = "";
+      data.forEach(r => { const li = document.createElement("li"); li.textContent = r.opcao; ul.appendChild(li); });
+      if (!document.body.classList.contains("ver-duvidas") && data.length && MODO !== "aluno"){
+        const a = document.getElementById("avisoDuvida");
+        a.textContent = data.length + (data.length === 1 ? " dúvida · tecla P" : " dúvidas · tecla P");
+        a.classList.add("on");
+      }
+      return;
+    }
+    const c = {}; data.forEach(r => c[r.opcao] = (c[r.opcao]||0)+1);
+    desenhar(p, c);
+  }
+
+  async function registrar(pergunta, opcao){
+    if (!sb) return { error:{ offline:true } };
+    return await sb.from("respostas").insert({ sala:SALA, pergunta, opcao });
+  }
+
+  document.querySelectorAll("[data-enquete]").forEach(bloco => {
+    const p = bloco.dataset.enquete;
+    bloco.querySelectorAll(".opcao").forEach(op => {
+      op.onclick = async () => {
+        if (respondido[p]) return;
+        respondido[p] = true; escolha[p] = op.dataset.opcao;
+        bloco.querySelectorAll(".opcao").forEach(o => o.classList.remove("escolhida"));
+        op.classList.add("escolhida");
+        const v = veredito[p] && document.getElementById(veredito[p]);
+        if (v) v.classList.remove("oculto");
+        const { error } = await registrar(p, op.dataset.opcao);
+        if (error){
+          msg(p, error.offline ? "Sem contagem coletiva agora: sua resposta vale e o grupo conta as mãos levantadas."
+                               : "Não deu para enviar. Toque de novo — sua escolha continua marcada.");
+          if (error.offline) respondido[p] = false;
+        } else carregar(p);
+      };
+    });
+  });
+
+  const campo = document.getElementById("campoChute"), btnChute = document.getElementById("enviarChute");
+  if (btnChute) btnChute.onclick = async () => {
+    const v = parseInt(campo.value, 10);
+    if (isNaN(v) || v < 0 || v > 5568){ msg("chute","Digite um número entre 0 e 5.568 — é o total de municípios do país."); campo.focus(); return; }
+    btnChute.disabled = true;
+    const { error } = await registrar("chute", String(v));
+    if (error){ btnChute.disabled = false;
+      msg("chute", error.offline ? "Seu chute: "+fmtN(v)+". Guarde — a turma vai comparar em voz alta." : "Não deu para enviar. Toque de novo."); }
+    else { msg("chute","Chute enviado: "+fmtN(v)+". Olhe a tela."); carregar("chute"); }
+  };
+  const btnRevelar = document.getElementById("revelar");
+  if (btnRevelar) btnRevelar.onclick = () => {
+    const r = document.getElementById("marcaReal");
+    r.classList.remove("oculto");
+    requestAnimationFrame(() => { r.style.left = (1696/5568*100) + "%"; });
+    document.getElementById("vereditoChute").classList.remove("oculto");
+    btnRevelar.disabled = true;
+  };
+
+  const campoP = document.getElementById("campoPalavra"), btnP = document.getElementById("enviarPalavra");
+  if (btnP) btnP.onclick = async () => {
+    const t = (campoP.value || "").trim();
+    if (t.length < 2 || t.split(/\s+/).length > 2){ msg("palavra","Uma palavra só, com pelo menos 2 letras."); campoP.focus(); return; }
+    btnP.disabled = true;
+    const { error } = await registrar("palavra", t);
+    if (error){ btnP.disabled = false; msg("palavra", error.offline ? "Sua palavra: "+t+". Diga em voz alta quando chegar a sua vez." : "Não deu para enviar. Toque de novo."); }
+    else { msg("palavra","Sua palavra já está na tela."); campoP.value = ""; }
+  };
+
+  const campoD = document.getElementById("campoDuvida"), btnD = document.getElementById("enviarDuvida");
+  if (btnD) btnD.onclick = async () => {
+    const t = (campoD.value || "").trim();
+    if (t.length < 4){ campoD.focus(); return; }
+    btnD.disabled = true;
+    const { error } = await registrar("duvida", t);
+    btnD.disabled = false;
+    campoD.value = "";
+    campoD.placeholder = error ? "não deu para enviar — tente de novo" : "dúvida enviada · pode mandar outra";
+  };
+
+  if (SUPABASE_URL && SUPABASE_KEY){
+    const s = document.createElement("script");
+    s.src = "https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2";
+    s.onload = () => {
+      sb = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+      sb.channel("sala-"+SALA)
+        .on("postgres_changes",{event:"INSERT",schema:"public",table:"respostas",filter:"sala=eq."+SALA},
+            e => carregar(e.new.pergunta))
+        .subscribe();
+      if (MODO === "aluno") registrar("entrada","ok");
+      carregar("entrada"); carregar("duvida");
+      const p = slides[atual].dataset.pergunta; if (p) carregar(p);
+    };
+    document.head.appendChild(s);
+  } else {
+    document.getElementById("semRede").classList.remove("oculto");
+  }
+
+  ir(0);
+})();
+</script>
+
+<!--
+  SQL do Supabase:
+  create table respostas (
+    id uuid primary key default gen_random_uuid(),
+    sala text not null, pergunta text not null, opcao text not null,
+    criado_em timestamptz default now()
+  );
+  alter table respostas enable row level security;
+  create policy "insere" on respostas for insert to anon with check (true);
+  create policy "le"     on respostas for select to anon using (true);
+  Ative Realtime na tabela em Database > Replication.
+-->
+</body>
+</html>
