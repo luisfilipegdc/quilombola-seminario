@@ -329,7 +329,6 @@ body.roteiro #roteiro{display:block}
   <div class="interno">
     <h2>O direito à terra vem antes. O direito à escola vem atrás dele.</h2>
     <div class="tempo" id="tempo" role="tablist"></div>
-    <button type="button" class="ano" id="modoTeste" style="margin-bottom:14px">Modo teste</button>
     <div class="detalhe" id="detalhe"></div>
   </div>
 </section>
@@ -740,15 +739,6 @@ body.roteiro #roteiro{display:block}
     }
     detalhe.classList.remove("entrando"); void detalhe.offsetWidth; detalhe.classList.add("entrando");
   }
-  const btnTeste = document.getElementById("modoTeste");
-  if (btnTeste) btnTeste.onclick = () => {
-    teste = !teste;
-    btnTeste.setAttribute("aria-selected", teste ? "true" : "false");
-    btnTeste.textContent = teste ? "Modo teste ligado \u00b7 clique num ano" : "Modo teste";
-    const sel = Array.from(tempo.children).find(x => x.getAttribute("aria-selected") === "true");
-    if (sel) sel.click();
-  };
-
   LINHA.forEach((item,i) => {
     const b = document.createElement("button");
     b.className = "ano"; b.type = "button"; b.textContent = item.ano; b.setAttribute("role","tab");
