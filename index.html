@@ -133,6 +133,7 @@ p{max-width:64ch;margin:0 0 .9em}
 .opcao .barra i{position:absolute;inset:0 auto 0 0;width:0;background:var(--dende);transition:width .55s cubic-bezier(.2,.7,.3,1)}
 .opcao .n{font-size:.78rem;color:var(--cal-fraco);font-variant-numeric:tabular-nums}
 .opcao.chegou .barra i{box-shadow:0 0 0 2px rgba(242,176,46,.45)}
+.anonimo{font-size:.82rem;color:var(--cal-fraco);margin:0 0 12px;max-width:44rem}
 .status{font-size:.88rem;color:var(--cal-fraco);min-height:1.4em;max-width:44rem}
 .devolutiva{border-left:3px solid var(--dende);padding-left:16px;margin-top:.8rem;display:none}
 .devolutiva.on{display:block;animation:sobe .35s ease}
@@ -283,7 +284,10 @@ body.aluno .slide.ativo>.interno,body.aluno.esperando #esperando{animation:entra
 body.aluno .opcao.escolhida{animation:confirmaVoto .42s cubic-bezier(.2,.7,.3,1)}
 
 @keyframes respira{0%,100%{opacity:.3;transform:scale(1)}50%{opacity:.95;transform:scale(1.4)}}
-#esperando .vivo{width:8px;height:8px;border-radius:50%;background:var(--dende);margin:6px auto 0;animation:respira 2.6s ease-in-out infinite}
+#esperando .vivo{margin-top:10px;font-size:.85rem;color:var(--cal-fraco);
+  display:flex;align-items:center;justify-content:center;gap:8px;min-height:1.3em}
+#esperando .vivo::before{content:"";width:7px;height:7px;border-radius:50%;background:var(--dende);
+  flex:none;animation:respira 2.6s ease-in-out infinite}
 
 body.roteiro .palco,body.roteiro .regua,body.roteiro .notas,body.roteiro #barraAluno{display:none}
 #roteiro{display:none;max-width:56rem;margin:0 auto;padding:36px 22px 80px}
@@ -329,6 +333,7 @@ body.roteiro #roteiro{display:block}
   <div class="interno">
     <h2>Na sua vida escolar, quilombo apareceu como o quê?</h2>
     <div class="janela somente-projetor"><div class="trilho"><i></i></div><span class="txt"></span></div>
+    <p class="anonimo somente-aluno">Ninguém vê quem respondeu o quê — na tela só aparece a contagem.</p>
     <div class="opcoes" data-enquete="abertura">
       <button class="opcao" data-opcao="Só escravidão"><b>Só no capítulo da escravidão</b><span class="barra"><i></i></span><span class="n"></span></button>
       <button class="opcao" data-opcao="Só 20 de novembro"><b>Só na semana do 20 de novembro</b><span class="barra"><i></i></span><span class="n"></span></button>
@@ -461,6 +466,7 @@ body.roteiro #roteiro{display:block}
   <div class="interno">
     <h2>Uma escola urbana de Brasília recebe 12 estudantes vindos de um território quilombola. A Resolução 8/2012 se aplica a ela?</h2>
     <div class="janela somente-projetor"><div class="trilho"><i></i></div><span class="txt"></span></div>
+    <p class="anonimo somente-aluno">Ninguém vê quem respondeu o quê — na tela só aparece a contagem.</p>
     <div class="opcoes" data-enquete="caso">
       <button class="opcao" data-opcao="Sim" data-certa="1"><b>Sim, integralmente</b><span class="barra"><i></i></span><span class="n"></span></button>
       <button class="opcao" data-opcao="Não"><b>Não, só a escolas dentro do território</b><span class="barra"><i></i></span><span class="n"></span></button>
@@ -601,7 +607,7 @@ body.roteiro #roteiro{display:block}
   <b>Acompanhe a tela.</b>
   <span>Quando chegar a sua vez, a pergunta aparece aqui sozinha — você não precisa procurar nada.</span>
   <span>A dúvida anônima pode ser enviada a qualquer momento, no balão do canto.</span>
-  <span class="vivo" aria-hidden="true"></span>
+  <span class="vivo" id="vivo"></span>
 </div>
 
 <div id="pontes" role="dialog" aria-modal="true" aria-label="Duas modalidades, a mesma tese">
@@ -690,11 +696,12 @@ body.roteiro #roteiro{display:block}
     if (MODO === "aluno"){
       const util = s.dataset.pergunta || s.querySelector(".somente-aluno") || atual === slides.length-1;
       document.body.classList.toggle("esperando", !util);
+      pintaEspera();
     }
     iniciaCrono(parseInt(s.dataset.tempo || "0", 10));
     pararVideos();
     if (s.dataset.janela) abreJanela(s);
-    if (s.dataset.pergunta) carregar(s.dataset.pergunta);
+    if (s.dataset.pergunta){ ultimaPergunta = s.dataset.pergunta; carregar(s.dataset.pergunta); }
     if (PROJETOR) publicaSlide(atual);
   }
   function vaiPara(i){
@@ -933,7 +940,16 @@ body.roteiro #roteiro{display:block}
   catch(e){ document.getElementById("qr").textContent = "Digite o endereço abaixo."; }
 
   /* ---------- dados ---------- */
-  const respondido = {}, escolha = {}, anterior = {};
+  const respondido = {}, escolha = {}, anterior = {}, contagens = {};
+  let ultimaPergunta = null;
+  function pintaEspera(){
+    const el = document.getElementById("vivo"); if (!el) return;
+    const gente = contagens.entrada || 0;
+    let t = gente + (gente === 1 ? " celular na sala" : " celulares na sala");
+    const n = ultimaPergunta && contagens[ultimaPergunta];
+    if (n) t += " · " + n + (n === 1 ? " respondeu" : " responderam") + " a última";
+    el.textContent = t;
+  }
   const vistas = new Set();
   const veredito = { caso:"vereditoCaso" };
   const msg = (p,t) => { const el = document.querySelector('[data-status="'+p+'"]'); if (el) el.textContent = t; };
@@ -989,6 +1005,7 @@ body.roteiro #roteiro{display:block}
       const m = document.getElementById("marcaMedia");
       m.querySelector(".valor").textContent = fmtN(media);
       m.style.left = Math.min(96, Math.max(4, media/5568*100)) + "%";
+      contagens.chute = nums.length; pintaEspera();
       msg("chute", nums.length + (nums.length === 1 ? " chute enviado" : " chutes enviados"));
       return;
     }
@@ -998,9 +1015,10 @@ body.roteiro #roteiro{display:block}
       if (c.dataset.n && +c.dataset.n < novo && suave){ c.classList.remove("pulso"); void c.offsetWidth; c.classList.add("pulso"); }
       c.dataset.n = novo;
       c.innerHTML = novo + "<small>" + (novo === 1 ? "celular na sala" : "celulares na sala") + "</small>";
+      contagens.entrada = novo; pintaEspera();
       return;
     }
-    if (p === "palavra"){ poeNuvem(data.map(r => r.opcao)); return; }
+    if (p === "palavra"){ contagens.palavra = data.length; pintaEspera(); poeNuvem(data.map(r => r.opcao)); return; }
     if (p === "duvida"){
       const ul = document.getElementById("listaDuvidas");
       ul.innerHTML = "";
@@ -1013,6 +1031,7 @@ body.roteiro #roteiro{display:block}
       return;
     }
     const c = {}; data.forEach(r => c[r.opcao] = (c[r.opcao]||0)+1);
+    contagens[p] = data.length; pintaEspera();
     desenhar(p, c);
   }
 
