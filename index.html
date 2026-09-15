@@ -719,12 +719,12 @@ body.roteiro #roteiro{display:block}
     if (!sb) return;
     await sb.from("sala_estado").upsert({ sala:SALA, slide:i, atualizado_em:new Date().toISOString() }, { onConflict:"sala" });
   }
-  document.getElementById("btnAvancar").onclick = () => ir(atual+1);
+  document.getElementById("btnAvancar").onclick = () => avanca();
   document.getElementById("btnVoltar").onclick = () => ir(atual-1);
   document.addEventListener("keydown", e => {
     if (document.body.classList.contains("roteiro") || MODO === "aluno" || e.target.tagName === "INPUT") return;
     const k = e.key.toLowerCase();
-    if (["ArrowRight","PageDown"," ","Enter"].includes(e.key)){ e.preventDefault(); ir(atual+1); }
+    if (["ArrowRight","PageDown"," ","Enter"].includes(e.key)){ e.preventDefault(); avanca(); }
     if (["ArrowLeft","PageUp"].includes(e.key)){ e.preventDefault(); ir(atual-1); }
     if (k === "n") document.body.classList.toggle("mostrar-notas");
     if (k === "t") rodando = !rodando;
@@ -765,7 +765,33 @@ body.roteiro #roteiro{display:block}
     if (foco && foco.tagName === "IFRAME" && !e.target.closest(".moldura")) foco.blur();
   });
 
-  function pararVideos(){ document.querySelectorAll(".moldura iframe").forEach(f => f.src = f.src); }
+  function estagioPendente(s){
+    const cand = s.querySelectorAll(".moldura iframe, #revelar, #revelarEscolas, .carta, .par");
+    for (const el of cand){
+      if (el.tagName === "IFRAME"){ if (!el.dataset.tocando) return el; }
+      else if (el.id){ if (!el.disabled) return el; }
+      else if (el.classList.contains("carta")){ if (!el.classList.contains("aberta")) return el; }
+      else if (el.classList.contains("par")){ if (!el.classList.contains("aberto")) return el; }
+    }
+    return null;
+  }
+  function acionaEstagio(el){
+    if (el.tagName === "IFRAME"){
+      el.dataset.tocando = "1";
+      if (!/autoplay=1/.test(el.src)) el.src = el.src + "&autoplay=1";
+    } else el.click();
+  }
+  function avanca(){
+    const et = PROJETOR ? estagioPendente(slides[atual]) : null;
+    if (et) acionaEstagio(et); else ir(atual+1);
+  }
+
+  function pararVideos(){
+    document.querySelectorAll(".moldura iframe").forEach(f => {
+      delete f.dataset.tocando;
+      f.src = f.src.replace(/&autoplay=1/g, "");
+    });
+  }
   Object.keys(VIDEOS).forEach(chave => {
     const alvo = document.querySelector('[data-slot="'+chave+'"]'); if (!alvo) return;
     const v = VIDEOS[chave];
@@ -791,9 +817,6 @@ body.roteiro #roteiro{display:block}
     { ano:"2003", norma:"Lei nº 10.639 e Decreto nº 4.887",
       txt:"História e Cultura Afro-Brasileira viram obrigação. E os territórios ganham procedimento de titulação.",
       fala:"A Lei 10.639 tornou obrigatório o ensino de História e Cultura Africana e Afro-Brasileira na Educação Básica, com foco na Educação das Relações Étnico-Raciais. No mesmo ano, o Decreto 4.887 criou o procedimento de identificação, reconhecimento e titulação dos territórios quilombolas." },
-    { ano:"2008", norma:"Lei nº 11.645",
-      txt:"Acrescenta a temática indígena ao art. 26-A da LDB.",
-      fala:"A Lei 11.645 acrescentou a temática indígena ao artigo 26-A. O currículo obrigatório passa a ter duas frentes: afro-brasileira e indígena." },
     { ano:"2010", norma:"Lei nº 12.288 — Estatuto da Igualdade Racial",
       txt:"Consolida direitos e traz um capítulo próprio de educação.",
       fala:"O Estatuto da Igualdade Racial consolidou direitos e trouxe um capítulo próprio de educação. Ainda sem norma específica para a escola quilombola — ela vem dois anos depois." },
@@ -803,9 +826,6 @@ body.roteiro #roteiro{display:block}
     { ano:"2020", norma:"Lei nº 14.113 — novo FUNDEB",
       txt:"Ponderação específica para matrícula em escola quilombola.",
       fala:"O novo FUNDEB criou fator de ponderação específico para a matrícula em escola quilombola. Sem dinheiro carimbado, diretriz não sai do papel." },
-    { ano:"2022", norma:"Censo Demográfico — IBGE",
-      txt:"Pela primeira vez o país conta sua população quilombola.",
-      fala:"Não é lei, mas muda tudo: em 2022, pela primeira vez, o Censo contou a população quilombola do Brasil. Sem dado não há meta, e sem meta não há política." },
     { ano:"2024", norma:"PNEERQ — Portaria MEC nº 470",
       txt:"Sete eixos e R$ 1,5 bilhão até 2027 para consolidar a modalidade.",
       fala:"A Política Nacional de Equidade, Educação para as Relações Étnico-Raciais e Educação Escolar Quilombola foi instituída pela Portaria 470, de 14 de maio de 2024, elaborada a partir de intensos debates e da participação ativa de lideranças quilombolas. São sete eixos e 1,5 bilhão de reais até 2027, com o objetivo declarado de consolidar a modalidade." },
