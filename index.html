@@ -231,6 +231,17 @@ body.aluno.duvida-aberta #bolhaDuvida .fechar{display:block}
 .regua #zerar{opacity:.4;transition:opacity .2s,border-color .2s,color .2s}
 .regua #zerar:hover{opacity:1}
 .regua #zerar.armado{opacity:1;color:var(--dende);border-color:var(--dende)}
+#pontes{position:fixed;inset:0;z-index:40;display:none;place-items:center;padding:24px;
+  background:rgba(10,20,36,.93);backdrop-filter:blur(3px)}
+#pontes.on{display:grid;animation:entraTela .3s cubic-bezier(.2,.7,.3,1)}
+#pontes .cartao{max-width:56ch;border-left:3px solid var(--dende);padding:4px 0 4px 26px}
+#pontes h3{font-family:var(--display);font-size:1.5rem;margin:0 0 18px}
+#pontes .par{display:grid;gap:3px;margin-bottom:14px}
+#pontes .par b{font-family:var(--display);font-size:.95rem}
+#pontes .par span{font-size:.85rem;color:var(--cal-fraco)}
+#pontes p{line-height:1.6;margin:18px 0 0}
+#pontes .assina{margin-top:22px;font-size:.85rem;color:var(--cal-fraco)}
+#pontes .sair{margin-top:20px;font-size:.75rem;color:var(--cal-fraco);opacity:.7}
 .crono{min-width:4.6rem;text-align:right;font-weight:600;font-variant-numeric:tabular-nums}
 .crono.estourou{color:var(--cal);text-decoration:underline}
 body.aluno .regua{position:static;background:none;margin-bottom:64px}
@@ -593,6 +604,17 @@ body.roteiro #roteiro{display:block}
   <span class="vivo" aria-hidden="true"></span>
 </div>
 
+<div id="pontes" role="dialog" aria-modal="true" aria-label="Duas modalidades, a mesma tese">
+  <div class="cartao">
+    <h3>Duas modalidades, a mesma tese</h3>
+    <div class="par"><b>Educação Escolar Quilombola</b><span>Resolução CNE/CEB nº 8, de 2012</span></div>
+    <div class="par"><b>Educação Bilíngue de Surdos</b><span>Lei nº 14.191, de 3 de agosto de 2021</span></div>
+    <p>A Lei 14.191 tirou a educação bilíngue de surdos de dentro da Educação Especial e a tornou modalidade própria na LDB, com a Libras como primeira língua e o português escrito como segunda. É o mesmo movimento que a Resolução 8/2012 fez pela educação escolar quilombola: a escola passa a se organizar a partir da língua e do território da comunidade, em vez de pedir que a comunidade caiba no currículo de fora.</p>
+    <p class="assina">Para a professora Valícia Gomes — Fundamentos da Educação Bilíngue.</p>
+    <p class="sair">tecla L ou Esc para fechar</p>
+  </div>
+</div>
+
 <div class="notas" id="notas"></div>
 
 <div class="regua">
@@ -696,6 +718,8 @@ body.roteiro #roteiro{display:block}
     if (k === "r") abreJanela(slides[atual]);
     if (k === "p"){ document.body.classList.toggle("ver-duvidas"); document.getElementById("avisoDuvida").classList.remove("on"); }
     if (k === "f") document.fullscreenElement ? document.exitFullscreen() : document.documentElement.requestFullscreen?.();
+    if (k === "l") document.getElementById("pontes").classList.toggle("on");
+    if (e.key === "Escape") document.getElementById("pontes").classList.remove("on");
   });
 
   const btnZerar = document.getElementById("zerar");
@@ -726,7 +750,7 @@ body.roteiro #roteiro{display:block}
     const v = VIDEOS[chave];
     if (v.id){
       alvo.innerHTML = '<iframe allow="accelerometer; clipboard-write; encrypted-media; picture-in-picture" allowfullscreen></iframe>';
-      alvo.querySelector("iframe").src = "https://www.youtube-nocookie.com/embed/"+v.id+"?rel=0&modestbranding=1";
+      alvo.querySelector("iframe").src = "https://www.youtube-nocookie.com/embed/"+v.id+"?rel=0&modestbranding=1&cc_load_policy=1&cc_lang_pref=pt";
     } else {
       alvo.innerHTML = '<div class="vazio"><b>Vídeo ainda não escolhido</b><div>'+v.titulo+' · '+v.duracao+
         '</div><div style="font-size:.85rem;max-width:34ch;margin:0 auto">Critério: quilombola falando em primeira pessoa, menos de 4 minutos, mostrando o presente. Cole o ID do YouTube em VIDEOS, no topo do arquivo.</div></div>';
